@@ -7,60 +7,62 @@
 
 ## 🌌 Visão Geral
 
-**Sirios Mosaic** é a nova arquitetura modular do ecossistema **Sirios**, projetada para permitir que o usuário converse em linguagem natural sobre dados financeiros estruturados — transformando perguntas em português em consultas SQL seguras, baseadas nas 13 views oficiais.
+**Sirios Mosaic** é a arquitetura modular do ecossistema **Sirios**, criada para transformar perguntas em português em consultas SQL seguras e auditáveis — sobre dados financeiros estruturados.
 
-Cada módulo do Mosaic é uma **peça independente** de um mosaico maior. Juntas, elas formam a pipeline:
+O núcleo do Mosaic é **100% dinâmico**: o sistema descobre automaticamente os *views* disponíveis em `data/views/*.yaml` (atualmente **8 views oficiais**), sem qualquer referência fixa no código.
+Cada módulo é independente e se comunica via contratos simples, formando a pipeline:
 
 ```
-Usuário → Gateway/API → Orquestrador NL → Extractors → Registry (YAMLs) → Query Builder → Executor RO → Formatter → Resposta
+Usuário → Gateway/API → Orchestrator NL → Extractors → Registry (YAMLs)
+→ Query Builder → Executor RO → Formatter → Resposta
 ```
 
 ---
 
 ## 🎯 Objetivo
 
-Garantir uma experiência **segura, modular e evolutiva** de NL→Views:
+Oferecer uma experiência **segura, modular e evolutiva** de NL→SQL:
 
-* 100% **read-only** (Postgres protegido, sem DML/DDLs);
+* Execução **read-only** em Postgres (sem DML/DDLs);
 * **Separação de responsabilidades** entre módulos;
-* **Catálogo centralizado** via YAMLs (`view_fiis_*`, `view_history_*`, `view_market_*`);
-* **Datas, moeda e linguagem 100% brasileiras**;
+* **Catálogo centralizado e autodetectável** (`data/views/*.yaml`);
+* **Formatos 100% brasileiros** (datas, moeda, percentuais);
 * **Observabilidade nativa** (Prometheus + Grafana + logs estruturados);
-* **Expansão incremental** (adiciona-se um módulo por vez, sem quebrar o sistema).
+* **Evolução incremental** (cada módulo pode ser adicionado, sem quebrar o todo).
 
 ---
 
 ## 🧩 Módulos Principais
 
-| Módulo              | Função                                                       | Repositório / Pasta    |
-| ------------------- | ------------------------------------------------------------ | ---------------------- |
-| **Gateway/API**     | Entrada pública; autenticação, CORS, rate limit, roteamento. | `mosaic-gateway`       |
-| **NL Orchestrator** | Interpreta perguntas e decide intent/view.                   | `mosaic-orchestrator`  |
-| **Extractors**      | Normaliza ticker, datas BR, períodos e filtros.              | `mosaic-extractors`    |
-| **Views Registry**  | Carrega e valida YAMLs de views.                             | `mosaic-registry`      |
-| **Query Builder**   | Gera SQL seguro a partir dos metadados.                      | `mosaic-builder`       |
-| **Executor RO**     | Executa SQL em Postgres com role de leitura.                 | `mosaic-executor`      |
-| **Formatter**       | Formata a resposta (moeda BRL, %, datas BR).                 | `mosaic-formatter`     |
-| **Observability**   | Métricas, logs, auditoria e tracing.                         | `mosaic-observability` |
+| Módulo              | Função                                                           | Pasta / Serviço     |
+| ------------------- | ---------------------------------------------------------------- | ------------------- |
+| **Gateway/API**     | Entrada pública (FastAPI): autenticação, roteamento, rate-limit. | `app/gateway`       |
+| **Orchestrator NL** | Interpreta perguntas e define a *view* e filtros adequados.      | `app/orchestrator`  |
+| **Extractors**      | Normalizam ticker, datas BR, períodos e filtros.                 | `app/extractors`    |
+| **Views Registry**  | Carrega e valida YAMLs de views dinâmicos.                       | `app/registry`      |
+| **Query Builder**   | Gera SQL seguro e parametrizado a partir dos metadados.          | `app/builder`       |
+| **Executor RO**     | Executa SQL em Postgres (read-only).                             | `app/executor`      |
+| **Formatter**       | Formata datas, moeda (BRL) e percentuais para exibição.          | `app/formatter`     |
+| **Observability**   | Métricas, logs e tracing estruturado.                            | `app/observability` |
 
 ---
 
-## 🗂️ Estrutura Inicial de Diretórios
+## 🗂️ Estrutura Atual de Diretórios
 
 ```
 sirios-mosaic/
 ├── app/
 │   ├── gateway/          # FastAPI principal
-│   ├── orchestrator/     # Regras NL→View
-│   ├── registry/         # Leitor/validador dos YAMLs
-│   ├── builder/          # Geração de SQL seguro
-│   ├── executor/         # Execução RO no Postgres
-│   ├── formatter/        # Saída BR (datas, moedas, %)
-│   ├── extractors/       # Normalizadores
-│   ├── observability/    # Métricas e logs
+│   ├── orchestrator/     # Regras NL→View (em implantação)
+│   ├── registry/         # Leitor/validador dinâmico de YAMLs
+│   ├── builder/          # SQL seguro e parametrizado
+│   ├── executor/         # Execução read-only no Postgres
+│   ├── formatter/        # Datas, moedas e percentuais BR
+│   ├── extractors/       # Normalização e parsing
+│   ├── observability/    # Métricas e logs Prometheus/Loki
 │   └── main.py
-├── data/views/           # 13 YAMLs do catálogo oficial
-├── tests/                # Fixtures e casos NL→SQL
+├── data/views/           # Catálogo dinâmico (8 YAMLs)
+├── tests/                # Casos NL→SQL e smoke-tests
 ├── docker-compose.yml
 ├── README.md
 └── pyproject.toml
@@ -68,46 +70,46 @@ sirios-mosaic/
 
 ---
 
-## 📅 Convenções (BR)
+## 📅 Convenções (Brasil)
 
-* **Datas:** `DD/MM/AAAA` (exibição e entrada); internamente `YYYY-MM-DD`.
-* **Moeda:** `R$ 12.345,67`.
-* **Percentuais:** `7,25%`.
-* **Ticker:** normalizado apenas na entrada (ex.: `HGLG` → `HGLG11`).
+* **Datas:** entrada e saída `DD/MM/AAAA` (internamente ISO `YYYY-MM-DD`);
+* **Moeda:** `R$ 12.345,67`;
+* **Percentuais:** `7,25%`;
+* **Ticker:** normalizado apenas na entrada (`HGLG` → `HGLG11`).
 
 ---
 
 ## 🔐 Segurança e Validação
 
-* Queries geradas apenas pelo Builder (sem SQL dinâmico).
-* Whitelist de colunas e ordenações por view.
-* Denylist SQL: `;`, `COPY`, `DROP`, `--`, `/* */`, `WITH` não controlado.
-* Role Postgres de leitura (`SELECT` only).
-* Logs auditáveis com `request_id` e `sql_hash`.
+* SQL gerado exclusivamente pelo **Query Builder** (sem concatenação livre).
+* **Whitelist de colunas e ordenações** por view (via YAML).
+* **Proteções básicas**: nega `;`, `COPY`, `DROP`, `--`, `/* */`, `WITH` não autorizado.
+* **Role Postgres read-only** e `SET default_transaction_read_only = on`.
+* **Logs auditáveis** com `request_id` e `sql_hash`.
 
 ---
 
 ## 📊 Observabilidade
 
-* Prometheus: `ask_cost_total`, `ask_rows_returned`, `nl_router_latency_ms`, `db_latency_ms`.
-* Grafana: painéis “Mosaic Gateway” e “Mosaic Builder”.
-* Logs JSON estruturados.
+* **Métricas Prometheus:** `mosaic_ask_latency_ms`, `mosaic_db_latency_ms`, `mosaic_db_rows_total`, `mosaic_ask_errors_total`, `mosaic_health_ok`.
+* **Grafana:** dashboards “Mosaic Gateway” e “Mosaic Builder”.
+* **Logs:** formato JSON, com `request_id` propagado.
 
 ---
 
 ## 🚀 Roadmap
 
-**Fase 0** – Skeleton com 2 views (`view_fiis_info`, `view_fiis_history_dividends`).
-**Fase 1** – Cobertura 13/13 + observabilidade.
-**Fase 2** – LLM seguro com catálogo fechado.
-**Fase 3** – SDK + OpenAPI + exportações (CSV, Parquet).
+**Fase 0** – Skeleton com 2 views (`fiis_info`, `fiis_history_dividends`).
+**Fase 1** – Catálogo dinâmico completo (8 views) + observabilidade.
+**Fase 2** – LLM seguro (fallback inteligente via Orchestrator).
+**Fase 3** – SDK + OpenAPI + exportações (CSV, Parquet, API externa).
 
 ---
 
 ## 🧠 Filosofia
 
-O Sirios Mosaic é projetado para **crescer mantendo o contexto**.
-Cada módulo é uma peça que **encaixa sem depender internamente do outro**, e cada contrato é testável e auditável.
+O **Sirios Mosaic** é feito para crescer sem perder integridade.
+Cada peça sabe o que é — e o que não é —, e o todo se adapta à medida que novas peças surgem.
 
 > “Arquitetura é quando cada parte sabe o que é — e o que não é.”
 > — *Leleo & Sirius, 2025*
@@ -116,9 +118,9 @@ Cada módulo é uma peça que **encaixa sem depender internamente do outro**, e 
 
 ## ⚙️ Licença e Contribuição
 
-* Licença: MIT.
-* Regras de contribuição e versionamento: `YYYYMMDDHHMM` + alias `current`.
-* Toda alteração de view ou contrato requer PR com testes e changelog.
+* Licença: MIT
+* Versionamento: `YYYYMMDDHHMM` + alias `current`
+* Toda alteração de view ou contrato requer PR com **testes e changelog**
 
 ---
 
