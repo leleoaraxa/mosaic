@@ -1,23 +1,3 @@
-## 🧩 Etapa 6 — Validador YAML Dinâmico
-
-**Objetivo:** validar estrutura mínima dos 8 YAMLs (sem fixar nomes).
-
-### 🔹 Arquivos a solicitar
-
-* `app/registry/loader.py`
-* `app/registry/service.py`
-* *(novo)* `app/registry/validator.py`
-* 1 YAML de exemplo (`data/views/view_fiis_info.yaml`)
-
-### 🔹 Ações previstas
-
-1. Criar `validator.py` com Pydantic ou Yamale:
-   Campos obrigatórios: `entity`, `columns`, `identifiers`, `ask`.
-2. Integrar ao loader — apenas avisa via log/metric se inválido.
-3. Adicionar `test_registry_validator.py`.
-
----
-
 ## 🧩 Etapa 7 — Config Centralizada
 
 **Objetivo:** mover limites/URLs mágicos para `settings.py`.

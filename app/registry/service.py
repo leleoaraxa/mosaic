@@ -1,3 +1,4 @@
+# app/registry/service.py
 import os
 from typing import Dict, Any, List, Optional
 from app.registry.loader import load_views

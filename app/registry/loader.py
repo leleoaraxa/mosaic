@@ -1,5 +1,11 @@
+# app/registry/loader.py
 import os, yaml
 from typing import Dict, Any
+import logging
+from app.registry.validator import validate_yaml_structure
+
+logger = logging.getLogger("registry.loader")
+
 
 def load_views(views_dir: str) -> Dict[str, Dict[str, Any]]:
     result: Dict[str, Dict[str, Any]] = {}
@@ -14,4 +20,10 @@ def load_views(views_dir: str) -> Dict[str, Dict[str, Any]]:
             entity = data.get("entity") or os.path.splitext(name)[0]
             result[entity] = data
             result[entity]["__file__"] = path
+            # valida estrutura mínima
+            errs = validate_yaml_structure(data)
+            if errs:
+                result[entity]["__validation_errors__"] = errs
+                logger.warning(f"YAML inválido: {name} -> {errs}")
+
     return result
