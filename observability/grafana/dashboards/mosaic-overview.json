@@ -1,0 +1,67 @@
+{
+  "uid": "sirios-mosaic-overview",
+  "title": "Sirios Mosaic — Overview",
+  "timezone": "browser",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "30s",
+  "time": { "from": "now-24h", "to": "now" },
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "Requests por endpoint (1m rate)",
+      "gridPos": { "x": 0, "y": 0, "w": 12, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "PROM" },
+      "targets": [
+        { "expr": "sum by (endpoint) (increase(mosaic_api_latency_ms_count[1m]))", "legendFormat": "{{endpoint}}" }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Erros por endpoint (1m)",
+      "gridPos": { "x": 12, "y": 0, "w": 12, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "PROM" },
+      "targets": [
+        { "expr": "sum by (endpoint,type) (increase(mosaic_api_errors_total[1m]))", "legendFormat": "{{endpoint}}/{{type}}" }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "P95 Latência /ask",
+      "gridPos": { "x": 0, "y": 8, "w": 12, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "PROM" },
+      "targets": [
+        { "expr": "histogram_quantile(0.95, sum by (le) (rate(mosaic_api_latency_ms_bucket{endpoint=\"/ask\"}[5m])))", "legendFormat": "p95" }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "P95 Latência DB (todas entidades)",
+      "gridPos": { "x": 12, "y": 8, "w": 12, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "PROM" },
+      "targets": [
+        { "expr": "histogram_quantile(0.95, sum by (le) (rate(mosaic_db_latency_ms_bucket[5m])))", "legendFormat": "db p95" }
+      ]
+    },
+    {
+      "type": "bargauge",
+      "title": "Top entidades por linhas (24h)",
+      "gridPos": { "x": 0, "y": 16, "w": 12, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "PROM" },
+      "targets": [
+        { "expr": "topk(10, sum by (entity) (increase(mosaic_db_rows_total[24h])))", "legendFormat": "{{entity}}" }
+      ]
+    },
+    {
+      "type": "bargauge",
+      "title": "Top entidades por latência média DB (24h)",
+      "gridPos": { "x": 12, "y": 16, "w": 12, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "PROM" },
+      "targets": [
+        { "expr": "topk(10, sum by (entity) (rate(mosaic_db_latency_ms_sum[24h]) / clamp_min(rate(mosaic_db_latency_ms_count[24h]),1)))", "legendFormat": "{{entity}}" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "ms", "decimals": 0 } }
+    }
+  ],
+  "annotations": { "list": [] }
+}

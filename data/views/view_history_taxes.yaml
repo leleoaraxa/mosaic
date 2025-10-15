@@ -1,0 +1,66 @@
+entity: view_history_taxes
+description: Histórico diário de taxas e índices.
+identifiers:
+- tax_date
+default_date_field: tax_date
+order_by_whitelist:
+- tax_date
+columns:
+- name: tax_date
+  description: Data de referência.
+  alias: Data
+- name: cdi_rate_pct
+  description: Taxa CDI (%).
+  alias: CDI
+- name: selic_rate_pct
+  description: Taxa SELIC (%).
+  alias: SELIC
+- name: ibov_points
+  description: Pontuação do índice IBOVESPA.
+  alias: Pontuação IBOVESPA
+- name: ibov_var_pct
+  description: Variação percentual do IBOVESPA.
+  alias: Variação IBOVESPA
+- name: ifix_points
+  description: Pontuação do índice IFIX.
+  alias: Pontuação IFIX
+- name: ifix_var_pct
+  description: Variação percentual do IFIX.
+  alias: Variação IFIX
+- name: ifil_points
+  description: Pontuação do índice IFIL.
+  alias: Pontuação IFIL
+- name: ifil_var_pct
+  description: Variação percentual do IFIL.
+  alias: Variação IFIL
+- name: usd_buy_value
+  description: Cotação de compra do dólar.
+  alias: USD compra
+- name: usd_sell_value
+  description: Cotação de venda do dólar.
+  alias: USD venda
+- name: usd_var_pct
+  description: Variação percentual do dólar.
+  alias: USD variação
+- name: eur_buy_value
+  description: Cotação de compra do euro.
+  alias: EURO compra
+- name: eur_sell_value
+  description: Cotação de venda do euro.
+  alias: EURO venda
+- name: eur_var_pct
+  description: Variação percentual do euro.
+  alias: EURO variação
+ask:
+  intents:
+  - taxas
+  - diario
+  keywords:
+  - ifix
+  - ifil
+  - ibov
+  - cdi
+  - selic
+  - dólar
+  - euro
+  - diário

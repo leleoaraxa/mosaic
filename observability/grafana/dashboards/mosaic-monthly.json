@@ -1,0 +1,21 @@
+{
+  "uid": "sirios-mosaic-monthly",
+  "title": "Sirios Mosaic — Monthly Review",
+  "timezone": "browser",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "1m",
+  "time": { "from": "now-30d", "to": "now" },
+  "panels": [
+    { "type": "stat", "title": "Total /ask (30d)", "gridPos": { "x": 0, "y": 0, "w": 6, "h": 4 }, "datasource": { "type": "prometheus", "uid": "PROM" }, "targets": [{ "expr": "sum(increase(mosaic_api_latency_ms_count{endpoint=\"/ask\"}[30d]))" }], "fieldConfig": { "defaults": { "unit": "short", "decimals": 0 } } },
+    { "type": "stat", "title": "Erro % (/ask, 30d)", "gridPos": { "x": 6, "y": 0, "w": 6, "h": 4 }, "datasource": { "type": "prometheus", "uid": "PROM" }, "targets": [{ "expr": "100 * ( sum(increase(mosaic_api_errors_total{endpoint=\"/ask\"}[30d])) / clamp_min(sum(increase(mosaic_api_latency_ms_count{endpoint=\"/ask\"}[30d])),1) )" }], "fieldConfig": { "defaults": { "unit": "percent", "decimals": 2 } } },
+    { "type": "stat", "title": "P95 Latência (/ask, 30d)", "gridPos": { "x": 12, "y": 0, "w": 6, "h": 4 }, "datasource": { "type": "prometheus", "uid": "PROM" }, "targets": [{ "expr": "histogram_quantile(0.95, sum by (le) (rate(mosaic_api_latency_ms_bucket{endpoint=\"/ask\"}[30d])))" }], "fieldConfig": { "defaults": { "unit": "ms", "decimals": 0 } } },
+    { "type": "timeseries", "title": "Volume diário de /ask", "gridPos": { "x": 0, "y": 4, "w": 12, "h": 8 }, "datasource": { "type": "prometheus", "uid": "PROM" }, "targets": [{ "expr": "sum by (endpoint) (increase(mosaic_api_latency_ms_count{endpoint=\"/ask\"}[1d]))", "legendFormat": "ask/dia" }] },
+    { "type": "timeseries", "title": "P95 Latência diária (/ask)", "gridPos": { "x": 12, "y": 4, "w": 12, "h": 8 }, "datasource": { "type": "prometheus", "uid": "PROM" }, "targets": [{ "expr": "histogram_quantile(0.95, sum by (le) (rate(mosaic_api_latency_ms_bucket{endpoint=\"/ask\"}[1d])))", "legendFormat": "p95 ms" }] },
+    { "type": "bargauge", "title": "Top 10 entidades por linhas (30d)", "gridPos": { "x": 0, "y": 12, "w": 12, "h": 8 }, "datasource": { "type": "prometheus", "uid": "PROM" }, "targets": [{ "expr": "topk(10, sum by (entity) (increase(mosaic_db_rows_total{entity!=\"\"}[30d])))", "legendFormat": "{{entity}}" }] },
+    { "type": "bargauge", "title": "Top 5 entidades por tempo DB (30d)", "gridPos": { "x": 12, "y": 12, "w": 12, "h": 8 }, "datasource": { "type": "prometheus", "uid": "PROM" }, "targets": [{ "expr": "topk(5, sum by (entity) (rate(mosaic_db_latency_ms_sum[30d]) / clamp_min(rate(mosaic_db_latency_ms_count[30d]),1)))", "legendFormat": "{{entity}}" }], "fieldConfig": { "defaults": { "unit": "ms", "decimals": 0 } } },
+    { "type": "timeseries", "title": "Erros por tipo (30d)", "gridPos": { "x": 0, "y": 20, "w": 12, "h": 8 }, "datasource": { "type": "prometheus", "uid": "PROM" }, "targets": [{ "expr": "sum by (type) (increase(mosaic_api_errors_total[30d]))", "legendFormat": "{{type}}" }] },
+    { "type": "logs", "title": "Top logs (30d, Loki)", "gridPos": { "x": 12, "y": 20, "w": 12, "h": 8 }, "datasource": { "type": "loki", "uid": "LOKI" }, "targets": [{ "expr": "{job=\"mosaic\"}" }] }
+  ],
+  "annotations": { "list": [] }
+}

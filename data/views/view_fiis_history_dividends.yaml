@@ -1,0 +1,37 @@
+entity: view_fiis_history_dividends
+description: Histórico de dividendos por FII.
+identifiers:
+- ticker
+- traded_until_date
+- payment_date
+default_date_field: payment_date
+order_by_whitelist:
+- payment_date
+- ticker
+columns:
+- name: ticker
+  description: Ticker do FII.
+  alias: Código FII
+- name: traded_until_date
+  description: Data limite de negociação com direito ao dividendo.
+  alias: Data limite de negociação
+- name: payment_date
+  description: Data de pagamento do dividendo.
+  alias: Data de pagamento
+- name: dividend_amount
+  description: Valor do dividendo pago.
+  alias: Valor do dividendo
+ask:
+  intents:
+  - dividends
+  - historico
+  keywords:
+  - dividendo
+  - provento
+  - histórico
+  - historico
+  - último
+  - mais recente
+  latest_words:
+  - último
+  - mais recente

@@ -1,0 +1,51 @@
+entity: view_fiis_history_prices
+description: Histórico de preços dos FIIs.
+identifiers:
+- ticker
+- price_date
+default_date_field: price_date
+order_by_whitelist:
+- price_date
+- ticker
+columns:
+- name: ticker
+  description: Ticker do FII.
+  alias: Código FII
+- name: price_date
+  description: Data de referência do preço.
+  alias: Data de referência
+- name: close_price
+  description: Preço de fechamento.
+  alias: Fechamento
+- name: adj_close_price
+  description: Preço de fechamento ajustado.
+  alias: Preço ajustado
+- name: open_price
+  description: Preço de abertura.
+  alias: Abertura
+- name: daily_range
+  description: Variação diária de preço.
+  alias: Variação do dia
+- name: max_price
+  description: Preço máximo no dia.
+  alias: Máxima
+- name: min_price
+  description: Preço mínimo no dia.
+  alias: Mínima
+ask:
+  intents:
+  - precos
+  - historico
+  keywords:
+  - preço
+  - precos
+  - fechamento
+  - abertura
+  - alta
+  - baixa
+  - histórico
+  - serie temporal
+  - gráfico
+  latest_words:
+  - último
+  - mais recente

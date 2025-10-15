@@ -1,0 +1,53 @@
+{
+  "uid": "sirios-mosaic-perf",
+  "title": "Sirios Mosaic — Performance & Errors",
+  "timezone": "browser",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "30s",
+  "time": { "from": "now-24h", "to": "now" },
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "P50/P95/P99 /ask",
+      "gridPos": { "x": 0, "y": 0, "w": 16, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "PROM" },
+      "targets": [
+        { "expr": "histogram_quantile(0.50, sum by (le) (rate(mosaic_api_latency_ms_bucket{endpoint=\"/ask\"}[5m])))", "legendFormat": "p50" },
+        { "expr": "histogram_quantile(0.95, sum by (le) (rate(mosaic_api_latency_ms_bucket{endpoint=\"/ask\"}[5m])))", "legendFormat": "p95" },
+        { "expr": "histogram_quantile(0.99, sum by (le) (rate(mosaic_api_latency_ms_bucket{endpoint=\"/ask\"}[5m])))", "legendFormat": "p99" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "ms", "decimals": 0 } }
+    },
+    {
+      "type": "timeseries",
+      "title": "Erros por tipo (/ask)",
+      "gridPos": { "x": 16, "y": 0, "w": 8, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "PROM" },
+      "targets": [
+        { "expr": "sum by (type) (increase(mosaic_api_errors_total{endpoint=\"/ask\"}[5m]))", "legendFormat": "{{type}}" }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "DB p95 por entidade",
+      "gridPos": { "x": 0, "y": 8, "w": 24, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "PROM" },
+      "targets": [
+        { "expr": "label_replace(histogram_quantile(0.95, sum by (entity, le) (rate(mosaic_db_latency_ms_bucket[5m]))), \"entity\", \"$1\", \"entity\", \"(.*)\")", "legendFormat": "{{entity}}" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "ms", "decimals": 0 } }
+    },
+    {
+      "type": "logs",
+      "title": "Logs de erro (Loki)",
+      "gridPos": { "x": 0, "y": 16, "w": 24, "h": 8 },
+      "datasource": { "type": "loki", "uid": "LOKI" },
+      "targets": [
+        { "expr": "{job=\"mosaic\"} |= `ERROR`", "refId": "A" }
+      ],
+      "options": { "showLabels": true }
+    }
+  ],
+  "annotations": { "list": [] }
+}

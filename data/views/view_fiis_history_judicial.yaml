@@ -1,0 +1,58 @@
+entity: view_fiis_history_judicial
+description: Processos judiciais relacionados a cada FII.
+identifiers:
+- ticker
+- process_number
+default_date_field: initiation_date
+order_by_whitelist:
+- created_at
+- updated_at
+- ticker
+columns:
+- name: ticker
+  description: Ticker do FII.
+  alias: Código FII
+- name: process_number
+  description: Número do processo judicial.
+  alias: Identificador do processo
+- name: judgment
+  description: Local ou instância do julgamento.
+  alias: Órgão julgador
+- name: instance
+  description: 'Instância judicial (ex.: 1ª, 2ª).'
+  alias: Instância
+- name: initiation_date
+  description: Data de abertura do processo.
+  alias: Abertura
+- name: cause_value
+  description: Valor da causa.
+  alias: Montante em disputa
+- name: process_parts
+  description: Partes envolvidas no processo.
+  alias: Partes
+- name: loss_risk_pct
+  description: Probabilidade de perda (%).
+  alias: Risco de perda
+- name: main_facts
+  description: Fatos principais do processo.
+  alias: Fatos principais
+- name: loss_impact_analysis
+  description: Análise do impacto em caso de perda.
+  alias: Análise de impacto
+- name: created_at
+  description: Data de criação do registro.
+  alias: Criado em
+- name: updated_at
+  description: Data da última atualização do registro.
+  alias: Atualizado em
+ask:
+  intents:
+  - judicial
+  - processos
+  keywords:
+  - judicial
+  - processo
+  - ação
+  - instância
+  - valor da causa
+  - riscos

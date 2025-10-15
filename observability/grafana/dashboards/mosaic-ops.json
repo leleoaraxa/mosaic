@@ -1,0 +1,49 @@
+{
+  "uid": "sirios-mosaic-ops",
+  "title": "Sirios Mosaic — Operations View",
+  "timezone": "browser",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "30s",
+  "time": { "from": "now-6h", "to": "now" },
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "Queries DB (rate)",
+      "gridPos": { "x": 0, "y": 0, "w": 12, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "PROM" },
+      "targets": [
+        { "expr": "sum by (entity) (increase(mosaic_db_queries_total[1m]))", "legendFormat": "{{entity}}" }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Linhas retornadas (rate)",
+      "gridPos": { "x": 12, "y": 0, "w": 12, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "PROM" },
+      "targets": [
+        { "expr": "sum by (entity) (increase(mosaic_db_rows_total[1m]))", "legendFormat": "{{entity}}" }
+      ]
+    },
+    {
+      "type": "bargauge",
+      "title": "Latência média DB por entidade (1h)",
+      "gridPos": { "x": 0, "y": 8, "w": 12, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "PROM" },
+      "targets": [
+        { "expr": "sum by (entity) (rate(mosaic_db_latency_ms_sum[1h]) / clamp_min(rate(mosaic_db_latency_ms_count[1h]),1))", "legendFormat": "{{entity}}" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "ms", "decimals": 0 } }
+    },
+    {
+      "type": "logs",
+      "title": "Logs recentes (Loki)",
+      "gridPos": { "x": 12, "y": 8, "w": 12, "h": 8 },
+      "datasource": { "type": "loki", "uid": "LOKI" },
+      "targets": [
+        { "expr": "{job=\"mosaic\"} |~ `ASK|EXECUTE_VIEW`", "refId": "A" }
+      ]
+    }
+  ],
+  "annotations": { "list": [] }
+}

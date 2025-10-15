@@ -1,0 +1,31 @@
+entity: view_market_indicators
+description: Indicadores de mercado históricos.
+identifiers:
+- indicator_date
+- indicator_name
+default_date_field: indicator_date
+order_by_whitelist:
+- indicator_date
+columns:
+- name: indicator_date
+  description: Data de referência do indicador.
+  alias: Data
+- name: indicator_name
+  description: Nome ou identificador do indicador.
+  alias: Indicador
+- name: indicator_value
+  description: Valor registrado do indicador.
+  alias: Valor
+ask:
+  intents:
+  - indicadores
+  - mercado
+  keywords:
+  - ifix
+  - ifil
+  - ibov
+  - cdi
+  - selic
+  - dólar
+  - euro
+  - indicadores

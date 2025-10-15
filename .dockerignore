@@ -1,0 +1,35 @@
+support.md
+# Ignore Git-related files
+.git
+.gitignore
+
+# Ignore local development environments
+.vscode/
+.idea/
+.env.example
+.venv/
+
+# Ignore build artifacts and temporary files
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+.tox/
+
+# Ignore logs and databases (unless explicitly needed in the image)
+*.log
+*.sqlite
+*.sqlite3
+
+# Ignore OS-specific files
+.DS_Store
+
+# Ignore documentation or other non-essential files for the Docker image
+docs/
+tests/
+
+# If you have specific files you want to exclude from the Docker context
+# but might be tracked by Git (e.g., sensitive config files not needed in the image)
+# local_settings.py

@@ -1,0 +1,254 @@
+entity: view_fiis_info
+description: Informações sobre cada FII listado (1 linha por fundo).
+identifiers:
+- ticker
+default_date_field: updated_at
+order_by_whitelist:
+- created_at
+- updated_at
+- ticker
+columns:
+- name: ticker
+  description: Código do fundo na B3.
+  alias: Código FII
+- name: fii_cnpj
+  description: CNPJ do FII (identificador único).
+  alias: CNPJ
+- name: ticker_full_name
+  description: Nome completo do ticker.
+  alias: Nome completo
+- name: b3_name
+  description: Nome de pregão na B3.
+  alias: Nome B3
+- name: classification
+  description: Classificação oficial do fundo.
+  alias: Classificação
+- name: sector
+  description: Setor de atuação do fundo.
+  alias: Setor
+- name: sub_sector
+  description: Tipo de indústria.
+  alias: Tipo de indústria
+- name: management_type
+  description: Tipo de gestão (ativa/passiva).
+  alias: Tipo de gestão
+- name: target_market
+  description: Público alvo.
+  alias: Público alvo
+- name: is_exclusive
+  description: Indica se o fundo é exclusivo (boolean).
+  alias: Fundo exclusivo
+- name: isin
+  description: Código ISIN do fundo.
+  alias: Código ISIN"
+- name: ipo_date
+  description: Data do IPO do fundo.
+  alias: Data IPO
+- name: website_url
+  description: URL oficial do fundo.
+  alias: Site oficial
+- name: admin_name
+  description: Nome do administrador do fundo.
+  alias: Administrador
+- name: admin_cnpj
+  description: CNPJ do administrador.
+  alias: CNPJ administrador
+- name: custodian_name
+  description: Nome do custodiante do fundo.
+  alias: Custodiante
+- name: ifil_weight_pct
+  description: Participação percentual no IFIL.
+  alias: Participação IFIL
+- name: ifix_weight_pct
+  description: Participação percentual no IFIX.
+  alias: Participação IFIX
+- name: dividend_yield_monthly
+  description: Dividend yield mensal.
+  alias: DY mensal
+- name: dividend_yield
+  description: Dividend yield.
+  alias: DY
+- name: sum_dividend_yearly
+  description: Soma dos dividendos pago por cota anual.
+  alias: Dividendos pagos no ano
+- name: last_dividend_amount
+  description: Último dividendo pago por cota.
+  alias: Último dividendo
+- name: last_dividends_payment_date
+  description: Data do último pagamento de dividendo.
+  alias: Data pagamento
+- name: market_cap_value
+  description: Valor de mercado do fundo.
+  alias: Valor de mercado
+- name: enterprise_value
+  description: Enterprise value (valor da firma).
+  alias: Enterprise value
+- name: price_book_ratio
+  description: Índice Preço/Patrimônio.
+  alias: P/VP
+- name: equity_per_share
+  description: Patrimônio líquido por cota.
+  alias: VPA
+- name: revenue_per_share
+  description: Receita por cota.
+  alias: Receita por cota
+- name: payout_ratio_pct
+  description: Payout ratio em percentual.
+  alias: Dividend Payout Ratio
+- name: growth_rate_pct
+  description: Taxa de crescimento percentual.
+  alias: Crescimento do patrimônio
+- name: cap_rate_pct
+  description: Cap rate percentual.
+  alias: Taxa de capitalização
+- name: volatility_pct
+  description: Volatilidade percentual.
+  alias: Volatilidade
+- name: sharpe_ratio
+  description: Índice de Sharpe.
+  alias: Sharpe
+- name: treynor_ratio
+  description: Índice de Treynor.
+  alias: Treynor
+- name: jensen_alpha
+  description: Alfa de Jensen.
+  alias: Jensen
+- name: beta_index
+  description: Índice beta.
+  alias: Beta
+- name: leverage_ratio
+  description: Índice de alavancagem.
+  alias: Alavancagem
+- name: equity_value
+  description: Patrimônio líquido.
+  alias: PL Total
+- name: shares_count
+  description: Quantidade de cotas emitidas.
+  alias: Cotas emitidas
+- name: variation_year_pct
+  description: Variação efetiva no ano (%).
+  alias: YTD
+- name: variation_month_pct
+  description: Variação efetiva no mês (%).
+  alias: MTD
+- name: equity_month_pct
+  description: Variação patrimonial mensal (%).
+  alias: PL mês
+- name: shareholders_count
+  description: Número de cotistas.
+  alias: Cotistas
+- name: dividend_reserve
+  description: Dividendos a distribuir.
+  alias: Reserva de dividendos
+- name: admin_fee_due
+  description: Taxa de administração a pagar.
+  alias: Administração devida
+- name: perf_fee_due
+  description: Taxa de performance a pagar.
+  alias: Performance devida
+- name: total_cash_value
+  description: Valor total em caixa.
+  alias: Disponibilidades
+- name: expected_revenue
+  description: Receita esperada.
+  alias: Projeção receita
+- name: liabilities_total
+  description: Total de passivos.
+  alias: Passivos
+- name: revenue_due_0_3m_pct
+  description: Receita a vencer em até 3 meses (%).
+  alias: Receita curto prazo
+- name: revenue_due_3_6m_pct
+  description: Receita a vencer em 3 a 6 meses (%).
+  alias: Vencimento receita 3-6m
+- name: revenue_due_6_9m_pct
+  description: Receita a vencer em 6 a 9 meses (%).
+  alias: Vencimento receita 6-9m
+- name: revenue_due_9_12m_pct
+  description: Receita a vencer em 9 a 12 meses (%).
+  alias: Vencimento receita 9-12m
+- name: revenue_due_12_15m_pct
+  description: Receita a vencer em 12 a 15 meses (%).
+  alias: Vencimento receita 12-15m
+- name: revenue_due_15_18m_pct
+  description: Receita a vencer em 15 a 18 meses (%).
+  alias: Vencimento receita 15-18m
+- name: revenue_due_18_21m_pct
+  description: Receita a vencer em 18 a 21 meses (%).
+  alias: Vencimento receita 18-21m
+- name: revenue_due_21_24m_pct
+  description: Receita a vencer em 21 a 24 meses (%).
+  alias: Vencimento receita 21-24m
+- name: revenue_due_24_27m_pct
+  description: Receita a vencer em 24 a 27 meses (%).
+  alias: Vencimento receita 24-27m
+- name: revenue_due_27_30m_pct
+  description: Receita a vencer em 27 a 30 meses (%).
+  alias: Vencimento receita 27-30m
+- name: revenue_due_30_33m_pct
+  description: Receita a vencer em 30 a 33 meses (%).
+  alias: Vencimento receita 30-33m
+- name: revenue_due_33_36m_pct
+  description: Receita a vencer em 33 a 36 meses (%).
+  alias: Vencimento receita 33-36m
+- name: revenue_due_over_36m_pct
+  description: Receita a vencer acima de 36 meses (%).
+  alias: Receita Longo prazo
+- name: revenue_due_undetermined_pct
+  description: Receita a vencer sem prazo definido (%).
+  alias: Receita sem prazo
+- name: revenue_igpm_pct
+  description: Receita indexada ao IGP-M (%).
+  alias: Receita Indexada IGPM
+- name: revenue_inpc_pct
+  description: Receita indexada ao INPC (%).
+  alias: Receita Indexada INPC
+- name: revenue_ipca_pct
+  description: Receita indexada ao IPCA (%).
+  alias: Receita Indexada IPCA
+- name: revenue_incc_pct
+  description: Receita indexada ao INCC (%).
+  alias: Receita Indexada INCC
+- name: users_ranking
+  description: Ranking atribuído por usuários.
+  alias: Ranking usuários
+- name: users_rank_movement
+  description: Movimento do ranking de usuários.
+  alias: Movimento usuários
+- name: sirios_ranking
+  description: Ranking atribuído pelo sistema Sirios.
+  alias: Ranking Sirios
+- name: sirios_rank_movement
+  description: Movimento do ranking Sirios.
+  alias: Movimento Sirios
+- name: ifix_ranking
+  description: Ranking relativo ao índice IFIX.
+  alias: Ranking IFIX
+- name: ifix_rank_movement
+  description: Movimento de posição no IFIX.
+  alias: Movimento IFIX
+- name: ifil_ranking
+  description: Ranking relativo ao índice IFIL.
+  alias: Ranking IFIL
+- name: ifil_rank_movement
+  description: Movimento de posição no IFIL.
+  alias: Movimento IFIL
+- name: created_at
+  description: Data de criação do registro.
+  alias: Criado em
+- name: updated_at
+  description: Data da última atualização do registro.
+  alias: Atualizado em
+ask:
+  intents:
+  - cadastro
+  - perfil
+  - info
+  keywords:
+  - cadastro
+  - dados
+  - ficha
+  - cnpj
+  - site
+  - administrador
+  - custodiante

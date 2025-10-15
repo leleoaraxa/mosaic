@@ -1,0 +1,123 @@
+###
+GET http://localhost:8000/metrics
+
+###
+GET http://localhost:8000/healthz
+
+###
+GET http://localhost:8000/healthz/full
+
+###
+GET http://localhost:8000/views
+
+###
+GET http://localhost:8000/views/view_fiis_history_assets
+
+###
+POST http://localhost:8000/admin/views/reload
+
+###
+GET http://localhost:8000/admin/validate-schema
+
+###
+POST http://localhost:8000/views/run
+Content-Type: application/json
+
+{
+  "entity": "view_fiis_history_assets",
+  "filters": { "ticker": "HGLG11" },
+  "select": ["ticker","asset_name","asset_address","total_area","units_count"],
+  "order_by": { "field": "asset_name", "dir": "ASC" },
+  "limit": 200
+}
+
+###
+POST http://localhost:8000/views/run
+Content-Type: application/json
+
+{
+  "entity": "view_fiis_history_dividends",
+  "filters": { "ticker": "XPML11" },
+  "select": ["ticker","payment_date","dividend_amount"],
+  "order_by": { "field": "payment_date", "dir": "DESC" },
+  "limit": 1
+}
+
+###
+POST http://localhost:8000/ask
+Content-Type: application/json
+
+{
+  "question": "cadastro do VINO11"
+}
+
+
+###
+POST http://localhost:8000/ask
+Content-Type: application/json
+
+{
+  "question": "dados do HGLG11"
+}
+
+###
+POST http://localhost:8000/ask
+Content-Type: application/json
+
+{
+  "question": "último provento do XPML"
+}
+
+###
+POST http://localhost:8000/views/run
+Content-Type: application/json
+
+{
+  "entity": "view_fiis_info",
+  "select": ["ticker"],
+  "limit": 1
+}
+
+###
+POST http://localhost:8000/ask
+Content-Type: application/json
+
+{
+  "question": "histórico de dividendos do KNRI entre 01/01/2024 e 30/06/2024"
+}
+
+
+###
+POST http://localhost:8000/ask
+Content-Type: application/json
+
+{
+  "question": "qual o CNPJ do KNRI"
+}
+
+###
+POST http://localhost:8000/ask
+Content-Type: application/json
+
+{
+  "question": "últimos dividendos de HGLG e KNRI entre 01/01/2024 e 31/03/2024"
+}
+
+
+###
+POST http://localhost:8000/ask
+Content-Type: application/json
+
+{
+  "question": "últimos dividendos do HGLG e KNRI e notícias do HGLG"
+}
+
+
+###
+POST http://localhost:8000/ask
+Content-Type: application/json
+
+{
+  "question": "últimos dividendos e notícias do HGLG e KNRI",
+  "top_k": 3
+}

@@ -1,0 +1,33 @@
+groups:
+  - name: sirios-mosaic-alerts
+    interval: 30s
+    rules:
+      - alert: MosaicAskErrorSpike
+        expr: |
+          increase(mosaic_api_errors_total{endpoint="/ask"}[5m])
+          / clamp_min(increase(mosaic_api_latency_ms_count{endpoint="/ask"}[5m]), 1) > 0.1
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Erro alto no /ask"
+          description: "Taxa de erro no /ask > 10% nos últimos 5 minutos."
+
+      - alert: MosaicDBLatencyHighP95
+        expr: |
+          histogram_quantile(0.95, sum by (le) (rate(mosaic_db_latency_ms_bucket[5m]))) > 800
+        for: 3m
+        labels:
+          severity: warning
+        annotations:
+          summary: "P95 de latência no DB alto"
+          description: "P95 do DB > 800ms por pelo menos 3 minutos."
+
+      - alert: MosaicAppDown
+        expr: mosaic_app_up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Mosaic app down"
+          description: "A métrica mosaic_app_up está 0 (app fora)."

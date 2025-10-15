@@ -1,0 +1,47 @@
+entity: view_fiis_history_news
+description: Notícias relacionadas aos FIIs.
+identifiers:
+- ticker
+- news_url
+default_date_field: news_date
+order_by_whitelist:
+- news_date
+- ticker
+columns:
+- name: ticker
+  description: Ticker do FII.
+  alias: Código FII
+- name: news_url
+  description: URL da notícia.
+  alias: Link da notícia
+- name: news_source
+  description: Fonte do conteúdo da notícia.
+  alias: Origem
+- name: news_title
+  description: Título da notícia.
+  alias: Título
+- name: news_date
+  description: Data da notícia.
+  alias: Data
+- name: news_tags
+  description: Tags relacionadas à notícia.
+  alias: Tags
+- name: news_description
+  description: Resumo ou descrição da notícia.
+  alias: Resumo
+ask:
+  intents:
+  - noticias
+  - news
+  keywords:
+  - notícia
+  - noticias
+  - news
+  - título
+  - fonte
+  - matéria
+  - histórico
+  - divulgação
+  latest_words:
+  - último
+  - mais recente

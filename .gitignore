@@ -1,0 +1,46 @@
+support.md
+# Byte-compiled / optimized / compiled files
+.pytest_cache
+__pycache__/
+*.pyc
+*.pyd
+*.pyo
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+.env
+.venv/
+pip-wheel-metadata/
+dist/
+build/
+*.egg-info/
+.tox/
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*~
+.DS_Store
+
+# Logs and databases
+*.log
+*.sqlite
+*.sqlite3
+
+# OS generated files
+.DS_Store
+.Trashes
+Thumbs.db
+
+# Testing
+.coverage
+.pytest_cache/
+htmlcov/
+
+# Specific to your project (add as needed)
+# For example, if you have a local settings file:
+# local_settings.py
