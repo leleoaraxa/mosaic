@@ -27,6 +27,10 @@ def test_e2e_ask_real_db_and_formatter():
     data = payload.get("data", [])
     assert rows == len(data) and rows >= 1
 
+    # request_id e meta presentes
+    assert "request_id" in payload and isinstance(payload["request_id"], str)
+    assert "meta" in payload and isinstance(payload["meta"].get("elapsed_ms"), int)
+
     # checa pelo menos um campo de data formatado (se existir no primeiro registro)
     sample = data[0]
     date_keys = [k for k in sample.keys() if k.endswith(("_date", "_until", "_at"))]
@@ -86,3 +90,9 @@ def test_prometheus_metrics_series_exist():
     ]
     for name in expected:
         assert name in text, f"métrica ausente em /metrics: {name}"
+
+    # série da entidade principal deve existir
+    assert (
+        'mosaic_db_rows_total{entity="view_fiis_info"}' in text
+        or "view_fiis_info" in text
+    )

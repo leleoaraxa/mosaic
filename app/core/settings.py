@@ -1,3 +1,4 @@
+# app/core/settings.py
 """
 Configurações centrais do Sirios Mosaic.
 Usa pydantic-settings para permitir overrides via .env ou variáveis do Docker.
@@ -28,6 +29,10 @@ class Settings(BaseSettings):
     tickers_cache_ttl: float = 300.0  # segundos
     ask_default_limit: int = 100
     ask_max_limit: int = 1000
+    # Assinatura de YAMLs (endurecimento opcional do pipeline)
+    views_signature_mode: str = "none"  # none|sha256|hmac
+    views_signature_key: Optional[str] = None
+    views_signature_required: bool = False
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 

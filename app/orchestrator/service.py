@@ -20,13 +20,40 @@ from app.extractors.normalizers import ExtractedRunRequest, normalize_request
 from app.builder.service import builder_service
 from app.executor.service import executor_service
 from app.formatter.serializer import to_human
-from app.observability.metrics import ASK_LATENCY_MS, ASK_ROWS
+from app.observability.metrics import (
+    ASK_LATENCY_MS,
+    ASK_ROWS,
+    DB_LATENCY_MS,
+    DB_QUERIES,
+    DB_ROWS,
+)
 
 logger = logging.getLogger("orchestrator")
 
 # ---------------------------------------------------------------------------
 # 🔹 Utilidades internas (mantêm semântica original)
 # ---------------------------------------------------------------------------
+# cache simples dos tickers válidos (para não consultar toda hora)
+_TICKERS_CACHE = {"ts": 0.0, "ttl": 300.0, "set": set()}
+
+
+def _load_valid_tickers(force: bool = False) -> set[str]:
+    now = time.time()
+    if (
+        not force
+        and _TICKERS_CACHE["set"]
+        and (now - _TICKERS_CACHE["ts"] < _TICKERS_CACHE["ttl"])
+    ):
+        return _TICKERS_CACHE["set"]
+    try:
+        rows = executor_service.run("SELECT ticker FROM view_fiis_info;", {})
+        s = {str(r.get("ticker", "")).upper() for r in rows if r.get("ticker")}
+        _TICKERS_CACHE.update({"ts": now, "set": s})
+        logger.info(f"cache de tickers atualizado: {len(s)} registros")
+        return s
+    except Exception as ex:
+        logger.warning(f"falha ao atualizar cache de tickers: {ex}")
+        return _TICKERS_CACHE["set"] or set()
 
 
 def _unaccent_lower(s: str) -> str:
@@ -115,16 +142,10 @@ def _default_date_field(entity: str) -> Optional[str]:
     d = m.get("default_date_field")
     if d and d in _cols(entity):
         return d
-    for cand in (
-        "payment_date",
-        "price_date",
-        "news_date",
-        "indicator_date",
-        "tax_date",
-        "created_at",
-        "updated_at",
-    ):
-        if cand in _cols(entity):
+    # 🔹 heurística genérica por sufixos padrão
+    cols = _cols(entity)
+    for cand in cols:
+        if any(cand.endswith(suf) for suf in ("_date", "_until", "_at")):
             return cand
     return None
 
@@ -136,11 +157,7 @@ def _default_date_field(entity: str) -> Optional[str]:
 
 def build_run_request(question: str) -> Dict[str, Any]:
     """Interpreta a pergunta e devolve RunViewRequest pronto."""
-    valid_tickers = {
-        r.get("ticker").upper()
-        for r in executor_service.run("SELECT ticker FROM view_fiis_info;", {})
-        if r.get("ticker")
-    }
+    valid_tickers = _load_valid_tickers()
     entity = _choose_entity_by_ask(question)
     tickers = _extract_tickers(question, valid_tickers)
     filters: Dict[str, Any] = {}
@@ -185,10 +202,19 @@ def route_question(question: str) -> Dict[str, Any]:
     normalized: ExtractedRunRequest = normalize_request(base_req)
     sql, params = builder_service.build_sql(normalized)
 
+    # ---- Execução com métricas ----
+    tdb0 = time.time()
     rows = executor_service.run(sql, params, row_limit=normalized.limit)
+    elapsed_db_ms = (time.time() - tdb0) * 1000.0
+
+    entity = normalized.entity
+    DB_LATENCY_MS.labels(entity=entity).observe(elapsed_db_ms)
+    DB_QUERIES.labels(entity=entity).inc()
+    DB_ROWS.labels(entity=entity).inc(len(rows))
+
     payload = {
         "request_id": req_id,
-        "entity": normalized.entity,
+        "entity": entity,
         "rows": len(rows),
         "data": to_human(rows),
         "meta": {"elapsed_ms": int((time.time() - t0) * 1000)},
@@ -198,14 +224,16 @@ def route_question(question: str) -> Dict[str, Any]:
         "ASK_ROUTE",
         extra={
             "request_id": req_id,
-            "entity": normalized.entity,
+            "entity": entity,
             "question": question,
             "rows": len(rows),
             "elapsed_ms": int((time.time() - t0) * 1000),
         },
     )
 
-    ASK_LATENCY_MS.labels(entity=normalized.entity).observe((time.time() - t0) * 1000.0)
-    ASK_ROWS.labels(entity=normalized.entity).inc(len(rows))
+    ASK_LATENCY_MS.labels(entity=entity).observe((time.time() - t0) * 1000.0)
+    ASK_ROWS.labels(entity=entity).inc(len(rows))
+    ASK_LATENCY_MS.labels(entity="__all__").observe((time.time() - t0) * 1000.0)
+    ASK_ROWS.labels(entity="__all__").inc(len(rows))
 
     return payload

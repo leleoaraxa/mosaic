@@ -1,6 +1,8 @@
+# app/builder/service.py
 from typing import Tuple, Dict, Any, List
 from app.registry.service import registry_service
 from app.extractors.normalizers import ExtractedRunRequest
+
 
 class BuilderService:
     def build_sql(self, req: ExtractedRunRequest) -> Tuple[str, Dict[str, Any]]:
@@ -24,7 +26,7 @@ class BuilderService:
         date_to = req.filters.get("date_to")
 
         for k, v in (req.filters or {}).items():
-            if k in ("date_from","date_to"):
+            if k in ("date_from", "date_to"):
                 continue
             if k.endswith("_from"):
                 base = k[:-5]
@@ -41,7 +43,7 @@ class BuilderService:
             if isinstance(v, (list, tuple)):
                 if not v:
                     continue
-                placeholder = ", ".join([f"%({k}_{i})s" for i,_ in enumerate(v)])
+                placeholder = ", ".join([f"%({k}_{i})s" for i, _ in enumerate(v)])
                 where.append(f"{k} IN ({placeholder})")
                 for i, val in enumerate(v):
                     params[f"{k}_{i}"] = val
@@ -52,7 +54,9 @@ class BuilderService:
         # Apply explicit ranges *_from/_to
         for base, rt in ranges.items():
             if columns and base not in columns:
-                raise ValueError(f"campo '{base}' não permitido para range em {req.entity}")
+                raise ValueError(
+                    f"campo '{base}' não permitido para range em {req.entity}"
+                )
             if "from" in rt:
                 where.append(f"{base} >= %({base}_from)s")
                 params[f"{base}_from"] = rt["from"]
@@ -63,17 +67,23 @@ class BuilderService:
         # Apply generic date_from/date_to using default_date_field or heuristic
         if date_from or date_to:
             date_field = default_date_field
-            # heuristic if not declared
+
+            # 🔹 heurística genérica baseada em sufixos de data
             if not date_field:
-                for cand in ("payment_date","traded_until_date","date","reference_date"):
-                    if cand in columns:
+                for cand in columns:
+                    if any(cand.endswith(suf) for suf in ("_date", "_until", "_at")):
                         date_field = cand
                         break
+
             if not date_field:
-                raise ValueError("date_from/date_to requerem 'default_date_field' na view ou uma coluna de data conhecida")
+                raise ValueError(
+                    "date_from/date_to requerem uma coluna de data (*_date|*_until|*_at) ou 'default_date_field' configurado"
+                )
+
             if date_from:
                 where.append(f"{date_field} >= %(date_from)s")
                 params["date_from"] = date_from
+
             if date_to:
                 where.append(f"{date_field} <= %(date_to)s")
                 params["date_to"] = date_to
@@ -87,11 +97,12 @@ class BuilderService:
             direction = (req.order_by.get("dir") or "ASC").upper()
             if field not in order_wl:
                 raise ValueError(f"order_by '{field}' não permitido para {req.entity}")
-            if direction not in ("ASC","DESC"):
+            if direction not in ("ASC", "DESC"):
                 direction = "ASC"
             sql += f" ORDER BY {field} {direction}"
 
         sql += f" LIMIT {int(req.limit)}"
         return sql, params
+
 
 builder_service = BuilderService()
