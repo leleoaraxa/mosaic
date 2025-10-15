@@ -28,7 +28,6 @@ build/
 
 # Ignore documentation or other non-essential files for the Docker image
 docs/
-tests/
 
 # If you have specific files you want to exclude from the Docker context
 # but might be tracked by Git (e.g., sensitive config files not needed in the image)
