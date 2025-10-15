@@ -26,7 +26,10 @@ from app.observability.metrics import (
     DB_LATENCY_MS,
     DB_QUERIES,
     DB_ROWS,
+    API_LATENCY_MS,
 )
+from app.core.settings import settings
+
 
 logger = logging.getLogger("orchestrator")
 
@@ -34,7 +37,7 @@ logger = logging.getLogger("orchestrator")
 # 🔹 Utilidades internas (mantêm semântica original)
 # ---------------------------------------------------------------------------
 # cache simples dos tickers válidos (para não consultar toda hora)
-_TICKERS_CACHE = {"ts": 0.0, "ttl": 300.0, "set": set()}
+_TICKERS_CACHE = {"ts": 0.0, "ttl": settings.tickers_cache_ttl, "set": set()}
 
 
 def _load_valid_tickers(force: bool = False) -> set[str]:
@@ -167,7 +170,7 @@ def build_run_request(question: str) -> Dict[str, Any]:
 
     order_by = None
     date_field = _default_date_field(entity)
-    limit = 100
+    limit = settings.ask_default_limit
     qnorm = _unaccent_lower(question)
     if date_field:
         if any(x in qnorm for x in ("ultimo", "último", "mais recente")):
@@ -175,7 +178,7 @@ def build_run_request(question: str) -> Dict[str, Any]:
             limit = 1
         elif "entre" in qnorm:
             order_by = {"field": date_field, "dir": "ASC"}
-            limit = 500
+            limit = min(settings.ask_max_limit, 500)
 
     return {
         "entity": entity,
@@ -235,5 +238,11 @@ def route_question(question: str) -> Dict[str, Any]:
     ASK_ROWS.labels(entity=entity).inc(len(rows))
     ASK_LATENCY_MS.labels(entity="__all__").observe((time.time() - t0) * 1000.0)
     ASK_ROWS.labels(entity="__all__").inc(len(rows))
+
+    # Métricas de API (/ask)
+    try:
+        API_LATENCY_MS.labels(endpoint="/ask").observe((time.time() - t0) * 1000.0)
+    except Exception:
+        pass
 
     return payload

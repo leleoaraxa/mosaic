@@ -96,3 +96,12 @@ def test_prometheus_metrics_series_exist():
         'mosaic_db_rows_total{entity="view_fiis_info"}' in text
         or "view_fiis_info" in text
     )
+
+
+def test_ask_metrics_exposed():
+    """Verifica métricas específicas do endpoint /ask."""
+    client.post("/ask", json={"question": "cadastro do VINO11"})
+    r = client.get("/metrics")
+    text = r.text
+    assert 'mosaic_api_latency_ms{endpoint="/ask"' in text, "latência /ask ausente"
+    assert 'mosaic_api_errors_total{endpoint="/ask"' in text, "erros /ask ausente"

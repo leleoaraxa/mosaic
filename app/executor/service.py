@@ -1,10 +1,13 @@
 # app/executor/service.py
 import os
-from typing import List, Dict, Any
+import re
 import psycopg
 import time
 import hashlib
+
 from psycopg.rows import dict_row
+from psycopg import sql
+from typing import List, Dict, Any
 
 
 class ExecutorService:
@@ -49,10 +52,16 @@ class ExecutorService:
         return rows
 
     def columns_for(self, entity: str) -> list[str]:
-        """Retorna as colunas reais da view no Postgres."""
+        """Retorna as colunas reais da view no Postgres (seguro contra injection)."""
+        if not re.match(r"^[A-Za-z0-9_\.]+$", entity):
+            raise ValueError(f"entity inválida: {entity!r}")
+
         with self._connect() as conn:
             with conn.cursor() as cur:
-                cur.execute(f"SELECT * FROM {entity} LIMIT 0;")
+                query = sql.SQL("SELECT * FROM {} LIMIT 0;").format(
+                    sql.Identifier(entity)
+                )
+                cur.execute(query)
                 return [desc[0] for desc in (cur.description or [])]
 
 

@@ -25,10 +25,11 @@ class Settings(BaseSettings):
     log_max_mb: int = 50
     log_backups: int = 3
 
-    # Cache / limites
+    # Cache / limites / métricas
     tickers_cache_ttl: float = 300.0  # segundos
     ask_default_limit: int = 100
     ask_max_limit: int = 1000
+    api_latency_window: int = 60  # segundos (janela para dashboards)
     # Assinatura de YAMLs (endurecimento opcional do pipeline)
     views_signature_mode: str = "none"  # none|sha256|hmac
     views_signature_key: Optional[str] = None
