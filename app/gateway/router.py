@@ -22,6 +22,7 @@ from app.observability.metrics import (
     API_LATENCY_MS,
     API_ERRORS,
 )
+from app.core.settings import settings
 
 
 def _lbl(x: Optional[str]) -> str:
@@ -38,10 +39,10 @@ if not logger.handlers:
 router = APIRouter()
 
 # cache simples dos tickers válidos (vindo do DB)
-_TICKERS_CACHE = {"ts": 0.0, "ttl": 300.0, "set": set()}  # 5 minutos de TTL
+_TICKERS_CACHE = {"ts": 0.0, "ttl": settings.tickers_cache_ttl, "set": set()}
 
-PROM_URL = os.environ.get("PROMETHEUS_URL", "http://prometheus:9090")
-GRAF_URL = os.environ.get("GRAFANA_URL", "http://grafana:3000")
+PROM_URL = settings.prometheus_url
+GRAF_URL = settings.grafana_url
 
 
 def _load_valid_tickers(force: bool = False) -> set[str]:
@@ -54,8 +55,12 @@ def _load_valid_tickers(force: bool = False) -> set[str]:
         return _TICKERS_CACHE["set"]
 
     try:
-        # pega os tickers direto da view_fiis_info
-        req = RunViewRequest(entity="view_fiis_info", select=["ticker"], limit=10000)
+        # pega os tickers direto da base
+        req = RunViewRequest(
+            entity="view_fiis_info",
+            select=["ticker"],
+            limit=min(10000, settings.ask_max_limit),
+        )
         res = _execute_view(req)
         data = res.get("data", []) or []
         s = {str(r.get("ticker", "")).upper() for r in data if r.get("ticker")}

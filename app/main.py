@@ -12,12 +12,13 @@ from app.observability.logging import (
 )
 from app.gateway.router import router as gateway_router
 from app.gateway.router import healthz_full
+from app.core.settings import settings
 
 # inicializa logging antes de criar app
 setup_json_logging(
-    level=os.getenv("LOG_LEVEL", "INFO"),
-    fmt=os.getenv("LOG_FORMAT", "json"),
-    file_path=os.getenv("LOG_FILE") or None,
+    level=settings.log_level,
+    fmt=settings.log_format,
+    file_path=settings.log_file,
 )
 logger = get_logger("mosaic")
 

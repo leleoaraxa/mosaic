@@ -1,0 +1,35 @@
+"""
+Configurações centrais do Sirios Mosaic.
+Usa pydantic-settings para permitir overrides via .env ou variáveis do Docker.
+"""
+
+from pydantic_settings import BaseSettings, SettingsConfigDict
+from typing import Optional
+
+
+class Settings(BaseSettings):
+    # Banco e executor
+    database_url: str
+    executor_mode: str = "read-only"
+    db_schema: str = "public"
+
+    # Observabilidade
+    prometheus_url: str = "http://prometheus:9090"
+    grafana_url: str = "http://grafana:3000"
+
+    # Logging
+    log_format: str = "json"
+    log_level: str = "INFO"
+    log_file: Optional[str] = None
+    log_max_mb: int = 50
+    log_backups: int = 3
+
+    # Cache / limites
+    tickers_cache_ttl: float = 300.0  # segundos
+    ask_default_limit: int = 100
+    ask_max_limit: int = 1000
+
+    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
+
+
+settings = Settings()
