@@ -11,7 +11,7 @@ def test_views_listing():
     assert "items" in r.json()
 
 
-def test_ask_route_dummy():
+def test_ask_route_basic():
     r = client.post("/ask", json={"question": "me mostra o cadastro do VINO11"})
     assert r.status_code == 200
     data = r.json()
