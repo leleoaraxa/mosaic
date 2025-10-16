@@ -19,6 +19,7 @@ services:
       - ./data/views:/srv/data/views:ro
       - ./logs:/var/log/mosaic
     networks:
+      - mosaic_network
       - zaratustra_default
     restart: unless-stopped
     healthcheck:
@@ -39,6 +40,7 @@ services:
     volumes:
       - ./observability/loki-config.yaml:/etc/loki/local-config.yaml:ro
     networks:
+      - mosaic_network
       - zaratustra_default
     restart: unless-stopped
 
@@ -54,6 +56,7 @@ services:
     depends_on:
       - loki
     networks:
+      - mosaic_network
       - zaratustra_default
     restart: unless-stopped
 
@@ -66,6 +69,7 @@ services:
     ports:
       - "9090:9090"
     networks:
+      - mosaic_network
       - zaratustra_default
     restart: unless-stopped
     command:
@@ -90,9 +94,27 @@ services:
       - prometheus
       - loki
     networks:
+      - mosaic_network
       - zaratustra_default
     restart: unless-stopped
 
+  redis:
+    image: redis:7-alpine
+    container_name: sirios-redis
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - mosaic_network
+      - zaratustra_default
+
 networks:
+  mosaic_network:
+    driver: bridge
   zaratustra_default:
     external: true
+
+volumes:
+  redis_data:

@@ -24,6 +24,15 @@ from app.observability.metrics import (
 )
 from app.core.settings import settings
 
+# --- pré-registro de séries Prometheus p/ garantir exposição mesmo com zero ---
+# latência também (Gauge aparece só após set) – já vamos setar 0 inicial
+API_LATENCY_MS.labels(endpoint="/ask").set(0.0)
+API_LATENCY_MS.labels(endpoint="/views/run").set(0.0)
+
+for ep in ("/ask", "/views/run"):
+    for etype in ("validation", "runtime"):
+        API_ERRORS.labels(endpoint=ep, type=etype).inc(0)
+
 
 def _lbl(x: Optional[str]) -> str:
     return (x or "unknown").strip() or "unknown"
@@ -499,9 +508,15 @@ def _execute_view(req: RunViewRequest):
             "data": to_human(rows),
             "meta": {"elapsed_ms": int((time.time() - t0) * 1000)},
         }
+    except ValueError as e:
+        # validação / entidade desconhecida, etc. → 400
+        entity = getattr(req, "entity", None)
+        logger.error(
+            "EXECUTE_VIEW_VALIDATION_ERROR", extra={"error": str(e), "entity": entity}
+        )
+        raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         etype = e.__class__.__name__.lower()
-        # se houver entity no req, usa; senão 'unknown'
         entity = getattr(req, "entity", None)
         ASK_ERRORS.labels(entity=_lbl(entity), type=etype).inc()
         logger.error("EXECUTE_VIEW_ERROR", extra={"error": str(e), "entity": entity})
@@ -513,31 +528,32 @@ def run_view(req: RunViewRequest):
     t0 = time.time()
     try:
         resp = _execute_view(req)
-        API_LATENCY_MS.labels(endpoint="/views/run").observe(
-            (time.time() - t0) * 1000.0
-        )
+        # era: API_LATENCY_MS.labels(endpoint="/views/run").observe(...)
+        API_LATENCY_MS.labels(endpoint="/views/run").set((time.time() - t0) * 1000.0)
         return resp
     except HTTPException as e:
         API_ERRORS.labels(endpoint="/views/run", type="validation").inc()
-        API_LATENCY_MS.labels(endpoint="/views/run").observe(
-            (time.time() - t0) * 1000.0
-        )
+        API_LATENCY_MS.labels(endpoint="/views/run").set((time.time() - t0) * 1000.0)
         raise
     except Exception as e:
         API_ERRORS.labels(endpoint="/views/run", type="runtime").inc()
-        API_LATENCY_MS.labels(endpoint="/views/run").observe(
-            (time.time() - t0) * 1000.0
-        )
+        API_LATENCY_MS.labels(endpoint="/views/run").set((time.time() - t0) * 1000.0)
         raise
 
 
 # ========================= /ask orientado por COMMENT =========================
 @router.post("/ask")
 def ask(req: AskRequest):
+    t0 = time.time()
     try:
         result = route_question(req.question)
+        API_LATENCY_MS.labels(endpoint="/ask").set((time.time() - t0) * 1000.0)
         return result
-    except Exception as e:
-        ASK_ERRORS.labels(entity="unknown", type="runtime").inc()
-        logger.exception("ASK_RUNTIME_ERROR", extra={"question": req.question})
+    except HTTPException:
+        API_ERRORS.labels(endpoint="/ask", type="validation").inc()
+        API_LATENCY_MS.labels(endpoint="/ask").set((time.time() - t0) * 1000.0)
+        raise
+    except Exception:
+        API_ERRORS.labels(endpoint="/ask", type="runtime").inc()
+        API_LATENCY_MS.labels(endpoint="/ask").set((time.time() - t0) * 1000.0)
         raise

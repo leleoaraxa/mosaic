@@ -289,4 +289,37 @@ def _load_valid_tickers(force: bool = False) -> set[str]:
 2. v4.0 — **Preloader de views** no Redis; `/admin/views/reload` repovoa; expor hash em log/metrics.
 3. v4.1 — Broadcast de reload (opcional) e `cache_hits/misses` em Prometheus.
 
+# Arquivos impactados
+```bash
++ app/
+  ├── core/settings.py             ← novas vars (cache_backend, redis_url, etc.)
+  ├── infrastructure/cache.py      ← novo adapter (RedisCacheBackend + Local)
+  ├── registry/preloader.py        ← novo (boot + hash do catálogo)
+  ├── registry/service.py          ← usa preloader() + publica no cache
+  ├── orchestrator/service.py      ← troca cache local → cache backend
+  ├── main.py                      ← lifespan chama preloader() no startup
+  └── observability/metrics.py     ← pode ganhar counters de cache hits/misses
+```
+
+# 📊 Integração com stack atual
+- Redis já está rodando no mosaic_network, visível como redis://sirios-redis:6379/0.
+- Variáveis recomendadas para o .env:
+```bash
+CACHE_BACKEND=redis
+REDIS_URL=redis://sirios-redis:6379/0
+CACHE_NAMESPACE=mosaic
+VIEWS_CACHE_TTL=86400
+TICKERS_CACHE_TTL=300
+```
+- Fallback automático: se o Redis falhar, o sistema continua em memória (sem crash).
+
+# ✅ Próximos commits sugeridos
+
+- feat(cache): add RedisCacheBackend + local fallback
+- feat(registry): implement Redis preloader for views
+- feat(orchestrator): move tickers cache to backend
+- docs: add MINI_DESIGN.md for Redis caching strategy
+
 ---
+
+

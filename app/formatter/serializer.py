@@ -1,114 +1,140 @@
 # app/formatter/serializer.py
-from typing import List, Dict, Any
-from datetime import datetime
-from decimal import Decimal
+from typing import List, Dict, Any, Optional, Union
+from datetime import datetime, date
+import re
+from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 
-# ---------------------------------------------------------------------------
-# 🔹 utilidades internas
-# ---------------------------------------------------------------------------
+Number = Union[int, float, Decimal]
+
+# ---------- Datas ----------
+_ISO_DATE_PREFIX = re.compile(r"^\d{4}-\d{2}-\d{2}")
+
+
+def _to_br_from_dateobj(d: Union[date, datetime]) -> str:
+    return d.strftime("%d/%m/%Y")
 
 
 def _iso_to_br_date(s: str) -> str:
     """
-    Converte ISO date/datetime para DD/MM/AAAA.
-    Aceita 'YYYY-MM-DD' e variações ISO com 'T' (ignora o horário).
+    Converte:
+      - 'YYYY-MM-DD' -> 'DD/MM/YYYY'
+      - 'YYYY-MM-DDTHH:MM:SS(.fff)?(Z|±HH:MM)?' -> 'DD/MM/YYYY'
+    Caso não reconheça, retorna s inalterado.
     """
-    if not isinstance(s, str):
+    try:
+        if not isinstance(s, str) or not _ISO_DATE_PREFIX.match(s):
+            return s
+        return datetime.strptime(s[:10], "%Y-%m-%d").strftime("%d/%m/%Y")
+    except Exception:
         return s
-    s_trim = s.strip()
-    # tenta só data
-    for fmt in ("%Y-%m-%d", "%Y/%m/%d"):
+
+
+# ---------- Números em BR ----------
+def _to_decimal(x: Any) -> Optional[Decimal]:
+    if isinstance(x, Decimal):
+        return x
+    if isinstance(x, (int, float)):
+        return Decimal(str(x))
+    if isinstance(x, str):
+        s = x.strip()
+        if not s:
+            return None
         try:
-            return datetime.strptime(s_trim, fmt).strftime("%d/%m/%Y")
-        except Exception:
-            pass
-    # tenta datetime ISO
-    try:
-        # remove fuso se existir
-        core = s_trim.replace("Z", "").split("")[0]
-        # corta milissegundos
-        core = core.split(".")[0]
-        dt = datetime.strptime(core, "%Y-%m-%dT%H:%M:%S")
-        return dt.strftime("%d/%m/%Y")
-    except Exception:
-        return s
-
-
-def _to_float(v: Any) -> float | None:
-    try:
-        if isinstance(v, (int, float)):
-            return float(v)
-        if isinstance(v, Decimal):
-            return float(v)
-        if isinstance(v, str):
-            # aceita “1.234,56” e “1234.56”
-            s = v.strip().replace(".", "").replace(",", ".")
-            return float(s)
-    except Exception:
-        return None
+            return Decimal(s)
+        except InvalidOperation:
+            s2 = s.replace(".", "").replace(",", ".")
+            try:
+                return Decimal(s2)
+            except InvalidOperation:
+                return None
     return None
 
 
-def _format_currency_brl(v: Any) -> str:
-    """Formata valores numéricos em R$ com separador decimal BR."""
-    num = _to_float(v)
-    if num is None:
-        return str(v)
-    return f"R$ {num:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
+def _fmt_br(n: Decimal, places: int) -> str:
+    q = Decimal(10) ** -places
+    n = n.quantize(q, rounding=ROUND_HALF_UP)
+    s = f"{n:f}"
+    if "." in s:
+        int_part, frac = s.split(".")
+    else:
+        int_part, frac = s, ""
+    int_part_with_sep = ""
+    while len(int_part) > 3:
+        int_part_with_sep = "." + int_part[-3:] + int_part_with_sep
+        int_part = int_part[:-3]
+    int_part_with_sep = int_part + int_part_with_sep
+    if places > 0:
+        frac = (frac + "0" * places)[:places]
+        return f"{int_part_with_sep},{frac}"
+    else:
+        return int_part_with_sep
 
 
-def _format_percent_br(v: Any) -> str:
-    """Formata valores em percentual (0–1 vira 0–100%)."""
-    num = _to_float(v)
-    if num is None:
-        return str(v)
-    if abs(num) < 1:
-        num *= 100
-    return f"{num:.2f}%".replace(".", ",")
+def _fmt_money_br(x: Any) -> Optional[str]:
+    d = _to_decimal(x)
+    if d is None:
+        return None
+    return f"R$ {_fmt_br(d, 2)}"
 
 
-def _format_number_br(v: Any) -> str:
-    """Formata número sem símbolo (ex.: valores *_value, *_ratio)."""
-    num = _to_float(v)
-    if num is None:
-        return str(v)
-    return f"{num:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
+def _fmt_value_br(x: Any, places: int = 2) -> Optional[str]:
+    d = _to_decimal(x)
+    if d is None:
+        return None
+    return _fmt_br(d, places)
 
 
-def _format_area_m2(v: Any) -> str:
-    """Formata áreas como número  ' m²'."""
-    num = _to_float(v)
-    if num is None:
-        return str(v)
-    return f"{num:,.2f} m²".replace(",", "X").replace(".", ",").replace("X", ".")
+def _fmt_percent_br(x: Any) -> Optional[str]:
+    d = _to_decimal(x)
+    if d is None:
+        return None
+    if d.copy_abs() <= Decimal("1"):
+        d = d * Decimal(100)
+    return f"{_fmt_br(d, 2)}%"
 
 
-# ---------------------------------------------------------------------------
-# 🔹 conversão principal
-# ---------------------------------------------------------------------------
+def _format_field(key: str, val: Any) -> Any:
+    # Datas por sufixo (aceita date/datetime ou string ISO)
+    if key.endswith("_date") or key.endswith("_until") or key.endswith("_at"):
+        if isinstance(val, (date, datetime)):
+            return _to_br_from_dateobj(val)
+        if isinstance(val, str):
+            return _iso_to_br_date(val)
+        return val
+
+    # Moeda
+    if key.endswith("_amount") or key.endswith("_price"):
+        out = _fmt_money_br(val)
+        return out if out is not None else val
+
+    # Percentual
+    if key.endswith("_pct") or key.endswith("_range"):
+        out = _fmt_percent_br(val)
+        return out if out is not None else val
+
+    # Número puro (2 casas)
+    if key.endswith("_value"):
+        out = _fmt_value_br(val, 2)
+        return out if out is not None else val
+
+    # Razões/índices (4 casas)
+    if key.endswith("_ratio"):
+        out = _fmt_value_br(val, 4)
+        return out if out is not None else val
+
+    # Área m² (2 casas)
+    if key.endswith("_area"):
+        num = _fmt_value_br(val, 2)
+        return f"{num} m²" if num is not None else val
+
+    return val
+
+
 def to_human(rows: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-    out = []
+    out: List[Dict[str, Any]] = []
     for r in rows:
-        d = {}
+        d: Dict[str, Any] = {}
         for k, v in r.items():
-            kl = k.lower()
-            # Datas: *_date, *_until, *_at
-            if kl.endswith("_date") or kl.endswith("_until") or kl.endswith("_at"):
-                d[k] = _iso_to_br_date(v) if isinstance(v, str) else v
-            # Preços (R$): *_price, *_amount
-            elif kl.endswith("_price") or kl.endswith("_amount"):
-                d[k] = _format_currency_brl(v)
-            # Percentuais: *_pct, *_range
-            elif kl.endswith("_pct") or kl.endswith("_range"):
-                d[k] = _format_percent_br(v)
-            # Área: *_area
-            elif kl.endswith("_area"):
-                d[k] = _format_area_m2(v)
-            # Números: *_value, *_ratio (sem símbolo)
-            elif kl.endswith("_value") or kl.endswith("_ratio"):
-                d[k] = _format_number_br(v)
-            else:
-                d[k] = v
-
+            d[k] = _format_field(k, v)
         out.append(d)
     return out
