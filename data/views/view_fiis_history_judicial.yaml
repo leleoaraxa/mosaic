@@ -1,5 +1,5 @@
 entity: view_fiis_history_judicial
-description: Processos judiciais relacionados a cada FII.
+description: Snapshot gerado do DB para view_fiis_history_judicial
 identifiers:
 - ticker
 - process_number
@@ -24,7 +24,7 @@ columns:
 - name: initiation_date
   description: Data de abertura do processo.
   alias: Abertura
-- name: cause_value
+- name: cause_amt
   description: Valor da causa.
   alias: Montante em disputa
 - name: process_parts

@@ -1,11 +1,13 @@
 entity: view_fiis_history_prices
-description: Histórico de preços dos FIIs.
+description: Snapshot gerado do DB para view_fiis_history_prices
 identifiers:
 - ticker
 - price_date
 default_date_field: price_date
 order_by_whitelist:
 - price_date
+- created_at
+- updated_at
 - ticker
 columns:
 - name: ticker
@@ -23,7 +25,7 @@ columns:
 - name: open_price
   description: Preço de abertura.
   alias: Abertura
-- name: daily_range
+- name: daily_range_pct
   description: Variação diária de preço.
   alias: Variação do dia
 - name: max_price
@@ -32,6 +34,12 @@ columns:
 - name: min_price
   description: Preço mínimo no dia.
   alias: Mínima
+- name: created_at
+  description: Data de criação do registro.
+  alias: Criado em
+- name: updated_at
+  description: Data da última atualização do registro.
+  alias: Atualizado em
 ask:
   intents:
   - precos

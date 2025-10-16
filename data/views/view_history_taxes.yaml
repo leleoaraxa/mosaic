@@ -1,10 +1,12 @@
 entity: view_history_taxes
-description: Histórico diário de taxas e índices.
+description: Snapshot gerado do DB para view_history_taxes
 identifiers:
 - tax_date
 default_date_field: tax_date
 order_by_whitelist:
 - tax_date
+- created_at
+- updated_at
 columns:
 - name: tax_date
   description: Data de referência.
@@ -15,42 +17,48 @@ columns:
 - name: selic_rate_pct
   description: Taxa SELIC (%).
   alias: SELIC
-- name: ibov_points
+- name: ibov_points_count
   description: Pontuação do índice IBOVESPA.
   alias: Pontuação IBOVESPA
 - name: ibov_var_pct
   description: Variação percentual do IBOVESPA.
   alias: Variação IBOVESPA
-- name: ifix_points
+- name: ifix_points_count
   description: Pontuação do índice IFIX.
   alias: Pontuação IFIX
 - name: ifix_var_pct
   description: Variação percentual do IFIX.
   alias: Variação IFIX
-- name: ifil_points
+- name: ifil_points_count
   description: Pontuação do índice IFIL.
   alias: Pontuação IFIL
 - name: ifil_var_pct
   description: Variação percentual do IFIL.
   alias: Variação IFIL
-- name: usd_buy_value
+- name: usd_buy_amt
   description: Cotação de compra do dólar.
   alias: USD compra
-- name: usd_sell_value
+- name: usd_sell_amt
   description: Cotação de venda do dólar.
   alias: USD venda
 - name: usd_var_pct
   description: Variação percentual do dólar.
   alias: USD variação
-- name: eur_buy_value
+- name: eur_buy_amt
   description: Cotação de compra do euro.
   alias: EURO compra
-- name: eur_sell_value
+- name: eur_sell_amt
   description: Cotação de venda do euro.
   alias: EURO venda
 - name: eur_var_pct
   description: Variação percentual do euro.
   alias: EURO variação
+- name: created_at
+  description: Data de criação do registro.
+  alias: Criado em
+- name: updated_at
+  description: Data da última atualização do registro.
+  alias: Atualizado em
 ask:
   intents:
   - taxas
@@ -64,3 +72,4 @@ ask:
   - dólar
   - euro
   - diário
+  - poupança

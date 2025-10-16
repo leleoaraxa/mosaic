@@ -1,11 +1,13 @@
 entity: view_market_indicators
-description: Indicadores de mercado históricos.
+description: Snapshot gerado do DB para view_market_indicators
 identifiers:
 - indicator_date
 - indicator_name
 default_date_field: indicator_date
 order_by_whitelist:
 - indicator_date
+- created_at
+- updated_at
 columns:
 - name: indicator_date
   description: Data de referência do indicador.
@@ -13,9 +15,15 @@ columns:
 - name: indicator_name
   description: Nome ou identificador do indicador.
   alias: Indicador
-- name: indicator_value
+- name: indicator_amt
   description: Valor registrado do indicador.
   alias: Valor
+- name: created_at
+  description: Data de criação do registro.
+  alias: Criado em
+- name: updated_at
+  description: Data da última atualização do registro.
+  alias: Atualizado em
 ask:
   intents:
   - indicadores

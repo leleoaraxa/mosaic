@@ -1,5 +1,5 @@
 entity: view_fiis_history_dividends
-description: Histórico de dividendos por FII.
+description: Snapshot gerado do DB para view_fiis_history_dividends
 identifiers:
 - ticker
 - traded_until_date
@@ -7,6 +7,8 @@ identifiers:
 default_date_field: payment_date
 order_by_whitelist:
 - payment_date
+- created_at
+- updated_at
 - ticker
 columns:
 - name: ticker
@@ -18,9 +20,15 @@ columns:
 - name: payment_date
   description: Data de pagamento do dividendo.
   alias: Data de pagamento
-- name: dividend_amount
+- name: dividend_amt
   description: Valor do dividendo pago.
   alias: Valor do dividendo
+- name: created_at
+  description: Data de criação do registro.
+  alias: Criado em
+- name: updated_at
+  description: Data da última atualização do registro.
+  alias: Atualizado em
 ask:
   intents:
   - dividends

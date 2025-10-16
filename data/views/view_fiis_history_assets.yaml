@@ -1,5 +1,5 @@
 entity: view_fiis_history_assets
-description: Ativos (imóveis) pertencentes a cada FII.
+description: Snapshot gerado do DB para view_fiis_history_assets
 identifiers:
 - ticker
 - asset_class
@@ -31,10 +31,10 @@ columns:
 - name: units_count
   description: Número de unidades do ativo.
   alias: Unidades
-- name: vacancy_pct
+- name: vacancy_ratio
   description: Taxa de vacância do ativo (%).
   alias: Vacância
-- name: non_compliant_pct
+- name: non_compliant_ratio
   description: Taxa de inadimplência do ativo (%).
   alias: Inadimplência
 - name: assets_status

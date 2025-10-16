@@ -1,19 +1,18 @@
 entity: view_fiis_history_news
-description: Notícias relacionadas aos FIIs.
+description: Snapshot gerado do DB para view_fiis_history_news
 identifiers:
 - ticker
 - news_url
 default_date_field: news_date
 order_by_whitelist:
 - news_date
+- created_at
+- updated_at
 - ticker
 columns:
 - name: ticker
   description: Ticker do FII.
   alias: Código FII
-- name: news_url
-  description: URL da notícia.
-  alias: Link da notícia
 - name: news_source
   description: Fonte do conteúdo da notícia.
   alias: Origem
@@ -29,6 +28,18 @@ columns:
 - name: news_description
   description: Resumo ou descrição da notícia.
   alias: Resumo
+- name: news_url
+  description: URL da notícia.
+  alias: Link da notícia
+- name: news_image_url
+  description: URL da imagem da notícia.
+  alias: Link da imagem da notícia
+- name: created_at
+  description: Data de criação do registro.
+  alias: Criado em
+- name: updated_at
+  description: Data da última atualização do registro.
+  alias: Atualizado em
 ask:
   intents:
   - noticias
