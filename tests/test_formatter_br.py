@@ -7,11 +7,12 @@ def test_formatter_suffix_based_rules():
             "payment_date": "2025-10-15",
             "traded_until_date": "2025-10-14",
             "created_at": "2025-10-15T13:45:22",
-            "dividend_amount": 0.57,  # *_amount -> R$
-            "yield_pct": 0.0123,  # *_pct -> %
-            "total_area": 1234.56,  # *_area -> m²
-            "market_cap_value": 9876543.21,  # *_value -> número BR (sem símbolo)
-            "sharpe_ratio": 1.2345,  # *_ratio -> número BR (sem símbolo)
+            "dividend_amt": 0.57,
+            "dy_pct": 0.0123,
+            "total_area": 1234.56,
+            "market_cap_value": 9876543.21,
+            "sharpe_ratio": 1.2345,
+            "shareholders_count": 1234,
         }
     ]
     out = to_human(rows)[0]
@@ -22,12 +23,10 @@ def test_formatter_suffix_based_rules():
     assert out["created_at"] == "15/10/2025"
 
     # Preço (R$)
-    assert isinstance(out["dividend_amount"], str) and out[
-        "dividend_amount"
-    ].startswith("R$ ")
+    assert isinstance(out["dividend_amt"], str) and out["dividend_amt"].startswith("R$ ")
 
     # Percentual
-    assert out["yield_pct"].endswith("%")
+    assert out["dy_pct"].endswith("%")
 
     # Área
     assert out["total_area"].endswith(" m²")
@@ -35,3 +34,6 @@ def test_formatter_suffix_based_rules():
     # Números sem símbolo
     assert "," in out["market_cap_value"]  # decimal BR
     assert "," in out["sharpe_ratio"]
+
+    # Contador inteiro
+    assert out["shareholders_count"].endswith("234") and "," not in out["shareholders_count"]

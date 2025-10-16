@@ -49,7 +49,7 @@ def _normalize_dates_in_filters(filters: Dict[str, Any]) -> Dict[str, Any]:
         if lk.endswith("_from") or lk.endswith("_to") or lk in ("date_from", "date_to"):
             if isinstance(v, str):
                 norm[k] = _br_to_iso(v)
-        if lk.endswith("date") or lk.endswith("data"):
+        if lk.endswith("date") or lk.endswith("data") or lk.endswith("_until") or lk.endswith("_at"):
             if isinstance(v, str):
                 norm[k] = _br_to_iso(v)
     return norm

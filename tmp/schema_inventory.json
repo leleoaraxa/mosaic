@@ -1,0 +1,890 @@
+[
+  {
+    "view_name": "view_fiis_history_assets",
+    "column_name": "ticker",
+    "declared_type_if_any": null,
+    "suffix_class": "generic"
+  },
+  {
+    "view_name": "view_fiis_history_assets",
+    "column_name": "asset_name",
+    "declared_type_if_any": null,
+    "suffix_class": "generic"
+  },
+  {
+    "view_name": "view_fiis_history_assets",
+    "column_name": "asset_class",
+    "declared_type_if_any": null,
+    "suffix_class": "generic"
+  },
+  {
+    "view_name": "view_fiis_history_assets",
+    "column_name": "asset_address",
+    "declared_type_if_any": null,
+    "suffix_class": "generic"
+  },
+  {
+    "view_name": "view_fiis_history_assets",
+    "column_name": "total_area",
+    "declared_type_if_any": null,
+    "suffix_class": "area"
+  },
+  {
+    "view_name": "view_fiis_history_assets",
+    "column_name": "units_count",
+    "declared_type_if_any": null,
+    "suffix_class": "count"
+  },
+  {
+    "view_name": "view_fiis_history_assets",
+    "column_name": "vacancy_ratio",
+    "declared_type_if_any": null,
+    "suffix_class": "ratio"
+  },
+  {
+    "view_name": "view_fiis_history_assets",
+    "column_name": "non_compliant_ratio",
+    "declared_type_if_any": null,
+    "suffix_class": "ratio"
+  },
+  {
+    "view_name": "view_fiis_history_assets",
+    "column_name": "assets_status",
+    "declared_type_if_any": null,
+    "suffix_class": "generic"
+  },
+  {
+    "view_name": "view_fiis_history_assets",
+    "column_name": "created_at",
+    "declared_type_if_any": null,
+    "suffix_class": "date"
+  },
+  {
+    "view_name": "view_fiis_history_assets",
+    "column_name": "updated_at",
+    "declared_type_if_any": null,
+    "suffix_class": "date"
+  },
+  {
+    "view_name": "view_fiis_history_dividends",
+    "column_name": "ticker",
+    "declared_type_if_any": null,
+    "suffix_class": "generic"
+  },
+  {
+    "view_name": "view_fiis_history_dividends",
+    "column_name": "traded_until_date",
+    "declared_type_if_any": null,
+    "suffix_class": "date"
+  },
+  {
+    "view_name": "view_fiis_history_dividends",
+    "column_name": "payment_date",
+    "declared_type_if_any": null,
+    "suffix_class": "date"
+  },
+  {
+    "view_name": "view_fiis_history_dividends",
+    "column_name": "dividend_amt",
+    "declared_type_if_any": null,
+    "suffix_class": "amt"
+  },
+  {
+    "view_name": "view_fiis_history_dividends",
+    "column_name": "created_at",
+    "declared_type_if_any": null,
+    "suffix_class": "date"
+  },
+  {
+    "view_name": "view_fiis_history_dividends",
+    "column_name": "updated_at",
+    "declared_type_if_any": null,
+    "suffix_class": "date"
+  },
+  {
+    "view_name": "view_fiis_history_judicial",
+    "column_name": "ticker",
+    "declared_type_if_any": null,
+    "suffix_class": "generic"
+  },
+  {
+    "view_name": "view_fiis_history_judicial",
+    "column_name": "process_number",
+    "declared_type_if_any": null,
+    "suffix_class": "generic"
+  },
+  {
+    "view_name": "view_fiis_history_judicial",
+    "column_name": "judgment",
+    "declared_type_if_any": null,
+    "suffix_class": "generic"
+  },
+  {
+    "view_name": "view_fiis_history_judicial",
+    "column_name": "instance",
+    "declared_type_if_any": null,
+    "suffix_class": "generic"
+  },
+  {
+    "view_name": "view_fiis_history_judicial",
+    "column_name": "initiation_date",
+    "declared_type_if_any": null,
+    "suffix_class": "date"
+  },
+  {
+    "view_name": "view_fiis_history_judicial",
+    "column_name": "cause_amt",
+    "declared_type_if_any": null,
+    "suffix_class": "amt"
+  },
+  {
+    "view_name": "view_fiis_history_judicial",
+    "column_name": "process_parts",
+    "declared_type_if_any": null,
+    "suffix_class": "generic"
+  },
+  {
+    "view_name": "view_fiis_history_judicial",
+    "column_name": "loss_risk_pct",
+    "declared_type_if_any": null,
+    "suffix_class": "pct"
+  },
+  {
+    "view_name": "view_fiis_history_judicial",
+    "column_name": "main_facts",
+    "declared_type_if_any": null,
+    "suffix_class": "generic"
+  },
+  {
+    "view_name": "view_fiis_history_judicial",
+    "column_name": "loss_impact_analysis",
+    "declared_type_if_any": null,
+    "suffix_class": "generic"
+  },
+  {
+    "view_name": "view_fiis_history_judicial",
+    "column_name": "created_at",
+    "declared_type_if_any": null,
+    "suffix_class": "date"
+  },
+  {
+    "view_name": "view_fiis_history_judicial",
+    "column_name": "updated_at",
+    "declared_type_if_any": null,
+    "suffix_class": "date"
+  },
+  {
+    "view_name": "view_fiis_history_news",
+    "column_name": "ticker",
+    "declared_type_if_any": null,
+    "suffix_class": "generic"
+  },
+  {
+    "view_name": "view_fiis_history_news",
+    "column_name": "news_source",
+    "declared_type_if_any": null,
+    "suffix_class": "generic"
+  },
+  {
+    "view_name": "view_fiis_history_news",
+    "column_name": "news_title",
+    "declared_type_if_any": null,
+    "suffix_class": "generic"
+  },
+  {
+    "view_name": "view_fiis_history_news",
+    "column_name": "news_date",
+    "declared_type_if_any": null,
+    "suffix_class": "date"
+  },
+  {
+    "view_name": "view_fiis_history_news",
+    "column_name": "news_tags",
+    "declared_type_if_any": null,
+    "suffix_class": "generic"
+  },
+  {
+    "view_name": "view_fiis_history_news",
+    "column_name": "news_description",
+    "declared_type_if_any": null,
+    "suffix_class": "generic"
+  },
+  {
+    "view_name": "view_fiis_history_news",
+    "column_name": "news_url",
+    "declared_type_if_any": null,
+    "suffix_class": "generic"
+  },
+  {
+    "view_name": "view_fiis_history_news",
+    "column_name": "news_image_url",
+    "declared_type_if_any": null,
+    "suffix_class": "generic"
+  },
+  {
+    "view_name": "view_fiis_history_news",
+    "column_name": "created_at",
+    "declared_type_if_any": null,
+    "suffix_class": "date"
+  },
+  {
+    "view_name": "view_fiis_history_news",
+    "column_name": "updated_at",
+    "declared_type_if_any": null,
+    "suffix_class": "date"
+  },
+  {
+    "view_name": "view_fiis_history_prices",
+    "column_name": "ticker",
+    "declared_type_if_any": null,
+    "suffix_class": "generic"
+  },
+  {
+    "view_name": "view_fiis_history_prices",
+    "column_name": "price_date",
+    "declared_type_if_any": null,
+    "suffix_class": "date"
+  },
+  {
+    "view_name": "view_fiis_history_prices",
+    "column_name": "close_price",
+    "declared_type_if_any": null,
+    "suffix_class": "price"
+  },
+  {
+    "view_name": "view_fiis_history_prices",
+    "column_name": "adj_close_price",
+    "declared_type_if_any": null,
+    "suffix_class": "price"
+  },
+  {
+    "view_name": "view_fiis_history_prices",
+    "column_name": "open_price",
+    "declared_type_if_any": null,
+    "suffix_class": "price"
+  },
+  {
+    "view_name": "view_fiis_history_prices",
+    "column_name": "daily_range_pct",
+    "declared_type_if_any": null,
+    "suffix_class": "pct"
+  },
+  {
+    "view_name": "view_fiis_history_prices",
+    "column_name": "max_price",
+    "declared_type_if_any": null,
+    "suffix_class": "price"
+  },
+  {
+    "view_name": "view_fiis_history_prices",
+    "column_name": "min_price",
+    "declared_type_if_any": null,
+    "suffix_class": "price"
+  },
+  {
+    "view_name": "view_fiis_history_prices",
+    "column_name": "created_at",
+    "declared_type_if_any": null,
+    "suffix_class": "date"
+  },
+  {
+    "view_name": "view_fiis_history_prices",
+    "column_name": "updated_at",
+    "declared_type_if_any": null,
+    "suffix_class": "date"
+  },
+  {
+    "view_name": "view_fiis_info",
+    "column_name": "ticker",
+    "declared_type_if_any": null,
+    "suffix_class": "generic"
+  },
+  {
+    "view_name": "view_fiis_info",
+    "column_name": "fii_cnpj",
+    "declared_type_if_any": null,
+    "suffix_class": "generic"
+  },
+  {
+    "view_name": "view_fiis_info",
+    "column_name": "ticker_full_name",
+    "declared_type_if_any": null,
+    "suffix_class": "generic"
+  },
+  {
+    "view_name": "view_fiis_info",
+    "column_name": "b3_name",
+    "declared_type_if_any": null,
+    "suffix_class": "generic"
+  },
+  {
+    "view_name": "view_fiis_info",
+    "column_name": "classification",
+    "declared_type_if_any": null,
+    "suffix_class": "generic"
+  },
+  {
+    "view_name": "view_fiis_info",
+    "column_name": "sector",
+    "declared_type_if_any": null,
+    "suffix_class": "generic"
+  },
+  {
+    "view_name": "view_fiis_info",
+    "column_name": "sub_sector",
+    "declared_type_if_any": null,
+    "suffix_class": "generic"
+  },
+  {
+    "view_name": "view_fiis_info",
+    "column_name": "management_type",
+    "declared_type_if_any": null,
+    "suffix_class": "generic"
+  },
+  {
+    "view_name": "view_fiis_info",
+    "column_name": "target_market",
+    "declared_type_if_any": null,
+    "suffix_class": "generic"
+  },
+  {
+    "view_name": "view_fiis_info",
+    "column_name": "is_exclusive",
+    "declared_type_if_any": null,
+    "suffix_class": "generic"
+  },
+  {
+    "view_name": "view_fiis_info",
+    "column_name": "isin",
+    "declared_type_if_any": null,
+    "suffix_class": "generic"
+  },
+  {
+    "view_name": "view_fiis_info",
+    "column_name": "ipo_date",
+    "declared_type_if_any": null,
+    "suffix_class": "date"
+  },
+  {
+    "view_name": "view_fiis_info",
+    "column_name": "website_url",
+    "declared_type_if_any": null,
+    "suffix_class": "generic"
+  },
+  {
+    "view_name": "view_fiis_info",
+    "column_name": "admin_name",
+    "declared_type_if_any": null,
+    "suffix_class": "generic"
+  },
+  {
+    "view_name": "view_fiis_info",
+    "column_name": "admin_cnpj",
+    "declared_type_if_any": null,
+    "suffix_class": "generic"
+  },
+  {
+    "view_name": "view_fiis_info",
+    "column_name": "custodian_name",
+    "declared_type_if_any": null,
+    "suffix_class": "generic"
+  },
+  {
+    "view_name": "view_fiis_info",
+    "column_name": "ifil_weight_pct",
+    "declared_type_if_any": null,
+    "suffix_class": "pct"
+  },
+  {
+    "view_name": "view_fiis_info",
+    "column_name": "ifix_weight_pct",
+    "declared_type_if_any": null,
+    "suffix_class": "pct"
+  },
+  {
+    "view_name": "view_fiis_info",
+    "column_name": "dy_monthly_pct",
+    "declared_type_if_any": null,
+    "suffix_class": "pct"
+  },
+  {
+    "view_name": "view_fiis_info",
+    "column_name": "dy_pct",
+    "declared_type_if_any": null,
+    "suffix_class": "pct"
+  },
+  {
+    "view_name": "view_fiis_info",
+    "column_name": "sum_anual_dy_amt",
+    "declared_type_if_any": null,
+    "suffix_class": "amt"
+  },
+  {
+    "view_name": "view_fiis_info",
+    "column_name": "last_dividend_amt",
+    "declared_type_if_any": null,
+    "suffix_class": "amt"
+  },
+  {
+    "view_name": "view_fiis_info",
+    "column_name": "last_payment_date",
+    "declared_type_if_any": null,
+    "suffix_class": "date"
+  },
+  {
+    "view_name": "view_fiis_info",
+    "column_name": "market_cap_value",
+    "declared_type_if_any": null,
+    "suffix_class": "value"
+  },
+  {
+    "view_name": "view_fiis_info",
+    "column_name": "enterprise_value",
+    "declared_type_if_any": null,
+    "suffix_class": "value"
+  },
+  {
+    "view_name": "view_fiis_info",
+    "column_name": "price_book_ratio",
+    "declared_type_if_any": null,
+    "suffix_class": "ratio"
+  },
+  {
+    "view_name": "view_fiis_info",
+    "column_name": "equity_per_share",
+    "declared_type_if_any": null,
+    "suffix_class": "share"
+  },
+  {
+    "view_name": "view_fiis_info",
+    "column_name": "revenue_per_share",
+    "declared_type_if_any": null,
+    "suffix_class": "share"
+  },
+  {
+    "view_name": "view_fiis_info",
+    "column_name": "dividend_payout_pct",
+    "declared_type_if_any": null,
+    "suffix_class": "pct"
+  },
+  {
+    "view_name": "view_fiis_info",
+    "column_name": "growth_rate",
+    "declared_type_if_any": null,
+    "suffix_class": "rate"
+  },
+  {
+    "view_name": "view_fiis_info",
+    "column_name": "cap_rate",
+    "declared_type_if_any": null,
+    "suffix_class": "rate"
+  },
+  {
+    "view_name": "view_fiis_info",
+    "column_name": "volatility_ratio",
+    "declared_type_if_any": null,
+    "suffix_class": "ratio"
+  },
+  {
+    "view_name": "view_fiis_info",
+    "column_name": "sharpe_ratio",
+    "declared_type_if_any": null,
+    "suffix_class": "ratio"
+  },
+  {
+    "view_name": "view_fiis_info",
+    "column_name": "treynor_ratio",
+    "declared_type_if_any": null,
+    "suffix_class": "ratio"
+  },
+  {
+    "view_name": "view_fiis_info",
+    "column_name": "jensen_alpha",
+    "declared_type_if_any": null,
+    "suffix_class": "alpha"
+  },
+  {
+    "view_name": "view_fiis_info",
+    "column_name": "beta_index",
+    "declared_type_if_any": null,
+    "suffix_class": "index"
+  },
+  {
+    "view_name": "view_fiis_info",
+    "column_name": "leverage_ratio",
+    "declared_type_if_any": null,
+    "suffix_class": "ratio"
+  },
+  {
+    "view_name": "view_fiis_info",
+    "column_name": "equity_value",
+    "declared_type_if_any": null,
+    "suffix_class": "value"
+  },
+  {
+    "view_name": "view_fiis_info",
+    "column_name": "shares_count",
+    "declared_type_if_any": null,
+    "suffix_class": "count"
+  },
+  {
+    "view_name": "view_fiis_info",
+    "column_name": "variation_year_ratio",
+    "declared_type_if_any": null,
+    "suffix_class": "ratio"
+  },
+  {
+    "view_name": "view_fiis_info",
+    "column_name": "variation_month_ratio",
+    "declared_type_if_any": null,
+    "suffix_class": "ratio"
+  },
+  {
+    "view_name": "view_fiis_info",
+    "column_name": "equity_month_ratio",
+    "declared_type_if_any": null,
+    "suffix_class": "ratio"
+  },
+  {
+    "view_name": "view_fiis_info",
+    "column_name": "shareholders_count",
+    "declared_type_if_any": null,
+    "suffix_class": "count"
+  },
+  {
+    "view_name": "view_fiis_info",
+    "column_name": "dividend_reserve_amt",
+    "declared_type_if_any": null,
+    "suffix_class": "amt"
+  },
+  {
+    "view_name": "view_fiis_info",
+    "column_name": "admin_fee_due_amt",
+    "declared_type_if_any": null,
+    "suffix_class": "amt"
+  },
+  {
+    "view_name": "view_fiis_info",
+    "column_name": "perf_fee_due_amt",
+    "declared_type_if_any": null,
+    "suffix_class": "amt"
+  },
+  {
+    "view_name": "view_fiis_info",
+    "column_name": "total_cash_amt",
+    "declared_type_if_any": null,
+    "suffix_class": "amt"
+  },
+  {
+    "view_name": "view_fiis_info",
+    "column_name": "expected_revenue_amt",
+    "declared_type_if_any": null,
+    "suffix_class": "amt"
+  },
+  {
+    "view_name": "view_fiis_info",
+    "column_name": "liabilities_total_amt",
+    "declared_type_if_any": null,
+    "suffix_class": "amt"
+  },
+  {
+    "view_name": "view_fiis_info",
+    "column_name": "revenue_due_0_3m_pct",
+    "declared_type_if_any": null,
+    "suffix_class": "pct"
+  },
+  {
+    "view_name": "view_fiis_info",
+    "column_name": "revenue_due_3_6m_pct",
+    "declared_type_if_any": null,
+    "suffix_class": "pct"
+  },
+  {
+    "view_name": "view_fiis_info",
+    "column_name": "revenue_due_6_9m_pct",
+    "declared_type_if_any": null,
+    "suffix_class": "pct"
+  },
+  {
+    "view_name": "view_fiis_info",
+    "column_name": "revenue_due_9_12m_pct",
+    "declared_type_if_any": null,
+    "suffix_class": "pct"
+  },
+  {
+    "view_name": "view_fiis_info",
+    "column_name": "revenue_due_12_15m_pct",
+    "declared_type_if_any": null,
+    "suffix_class": "pct"
+  },
+  {
+    "view_name": "view_fiis_info",
+    "column_name": "revenue_due_15_18m_pct",
+    "declared_type_if_any": null,
+    "suffix_class": "pct"
+  },
+  {
+    "view_name": "view_fiis_info",
+    "column_name": "revenue_due_18_21m_pct",
+    "declared_type_if_any": null,
+    "suffix_class": "pct"
+  },
+  {
+    "view_name": "view_fiis_info",
+    "column_name": "revenue_due_21_24m_pct",
+    "declared_type_if_any": null,
+    "suffix_class": "pct"
+  },
+  {
+    "view_name": "view_fiis_info",
+    "column_name": "revenue_due_24_27m_pct",
+    "declared_type_if_any": null,
+    "suffix_class": "pct"
+  },
+  {
+    "view_name": "view_fiis_info",
+    "column_name": "revenue_due_27_30m_pct",
+    "declared_type_if_any": null,
+    "suffix_class": "pct"
+  },
+  {
+    "view_name": "view_fiis_info",
+    "column_name": "revenue_due_30_33m_pct",
+    "declared_type_if_any": null,
+    "suffix_class": "pct"
+  },
+  {
+    "view_name": "view_fiis_info",
+    "column_name": "revenue_due_33_36m_pct",
+    "declared_type_if_any": null,
+    "suffix_class": "pct"
+  },
+  {
+    "view_name": "view_fiis_info",
+    "column_name": "revenue_due_over_36m_pct",
+    "declared_type_if_any": null,
+    "suffix_class": "pct"
+  },
+  {
+    "view_name": "view_fiis_info",
+    "column_name": "revenue_due_undetermined_pct",
+    "declared_type_if_any": null,
+    "suffix_class": "pct"
+  },
+  {
+    "view_name": "view_fiis_info",
+    "column_name": "revenue_igpm_pct",
+    "declared_type_if_any": null,
+    "suffix_class": "pct"
+  },
+  {
+    "view_name": "view_fiis_info",
+    "column_name": "revenue_inpc_pct",
+    "declared_type_if_any": null,
+    "suffix_class": "pct"
+  },
+  {
+    "view_name": "view_fiis_info",
+    "column_name": "revenue_ipca_pct",
+    "declared_type_if_any": null,
+    "suffix_class": "pct"
+  },
+  {
+    "view_name": "view_fiis_info",
+    "column_name": "revenue_incc_pct",
+    "declared_type_if_any": null,
+    "suffix_class": "pct"
+  },
+  {
+    "view_name": "view_fiis_info",
+    "column_name": "users_ranking_count",
+    "declared_type_if_any": null,
+    "suffix_class": "count"
+  },
+  {
+    "view_name": "view_fiis_info",
+    "column_name": "users_rank_movement_count",
+    "declared_type_if_any": null,
+    "suffix_class": "count"
+  },
+  {
+    "view_name": "view_fiis_info",
+    "column_name": "sirios_ranking_count",
+    "declared_type_if_any": null,
+    "suffix_class": "count"
+  },
+  {
+    "view_name": "view_fiis_info",
+    "column_name": "sirios_rank_movement_count",
+    "declared_type_if_any": null,
+    "suffix_class": "count"
+  },
+  {
+    "view_name": "view_fiis_info",
+    "column_name": "ifix_ranking_count",
+    "declared_type_if_any": null,
+    "suffix_class": "count"
+  },
+  {
+    "view_name": "view_fiis_info",
+    "column_name": "ifix_rank_movement_count",
+    "declared_type_if_any": null,
+    "suffix_class": "count"
+  },
+  {
+    "view_name": "view_fiis_info",
+    "column_name": "ifil_ranking_count",
+    "declared_type_if_any": null,
+    "suffix_class": "count"
+  },
+  {
+    "view_name": "view_fiis_info",
+    "column_name": "ifil_rank_movement_count",
+    "declared_type_if_any": null,
+    "suffix_class": "count"
+  },
+  {
+    "view_name": "view_fiis_info",
+    "column_name": "created_at",
+    "declared_type_if_any": null,
+    "suffix_class": "date"
+  },
+  {
+    "view_name": "view_fiis_info",
+    "column_name": "updated_at",
+    "declared_type_if_any": null,
+    "suffix_class": "date"
+  },
+  {
+    "view_name": "view_history_taxes",
+    "column_name": "tax_date",
+    "declared_type_if_any": null,
+    "suffix_class": "date"
+  },
+  {
+    "view_name": "view_history_taxes",
+    "column_name": "cdi_rate_pct",
+    "declared_type_if_any": null,
+    "suffix_class": "pct"
+  },
+  {
+    "view_name": "view_history_taxes",
+    "column_name": "selic_rate_pct",
+    "declared_type_if_any": null,
+    "suffix_class": "pct"
+  },
+  {
+    "view_name": "view_history_taxes",
+    "column_name": "ibov_points_count",
+    "declared_type_if_any": null,
+    "suffix_class": "count"
+  },
+  {
+    "view_name": "view_history_taxes",
+    "column_name": "ibov_var_pct",
+    "declared_type_if_any": null,
+    "suffix_class": "pct"
+  },
+  {
+    "view_name": "view_history_taxes",
+    "column_name": "ifix_points_count",
+    "declared_type_if_any": null,
+    "suffix_class": "count"
+  },
+  {
+    "view_name": "view_history_taxes",
+    "column_name": "ifix_var_pct",
+    "declared_type_if_any": null,
+    "suffix_class": "pct"
+  },
+  {
+    "view_name": "view_history_taxes",
+    "column_name": "ifil_points_count",
+    "declared_type_if_any": null,
+    "suffix_class": "count"
+  },
+  {
+    "view_name": "view_history_taxes",
+    "column_name": "ifil_var_pct",
+    "declared_type_if_any": null,
+    "suffix_class": "pct"
+  },
+  {
+    "view_name": "view_history_taxes",
+    "column_name": "usd_buy_amt",
+    "declared_type_if_any": null,
+    "suffix_class": "amt"
+  },
+  {
+    "view_name": "view_history_taxes",
+    "column_name": "usd_sell_amt",
+    "declared_type_if_any": null,
+    "suffix_class": "amt"
+  },
+  {
+    "view_name": "view_history_taxes",
+    "column_name": "usd_var_pct",
+    "declared_type_if_any": null,
+    "suffix_class": "pct"
+  },
+  {
+    "view_name": "view_history_taxes",
+    "column_name": "eur_buy_amt",
+    "declared_type_if_any": null,
+    "suffix_class": "amt"
+  },
+  {
+    "view_name": "view_history_taxes",
+    "column_name": "eur_sell_amt",
+    "declared_type_if_any": null,
+    "suffix_class": "amt"
+  },
+  {
+    "view_name": "view_history_taxes",
+    "column_name": "eur_var_pct",
+    "declared_type_if_any": null,
+    "suffix_class": "pct"
+  },
+  {
+    "view_name": "view_history_taxes",
+    "column_name": "created_at",
+    "declared_type_if_any": null,
+    "suffix_class": "date"
+  },
+  {
+    "view_name": "view_history_taxes",
+    "column_name": "updated_at",
+    "declared_type_if_any": null,
+    "suffix_class": "date"
+  },
+  {
+    "view_name": "view_market_indicators",
+    "column_name": "indicator_date",
+    "declared_type_if_any": null,
+    "suffix_class": "date"
+  },
+  {
+    "view_name": "view_market_indicators",
+    "column_name": "indicator_name",
+    "declared_type_if_any": null,
+    "suffix_class": "generic"
+  },
+  {
+    "view_name": "view_market_indicators",
+    "column_name": "indicator_amt",
+    "declared_type_if_any": null,
+    "suffix_class": "amt"
+  },
+  {
+    "view_name": "view_market_indicators",
+    "column_name": "created_at",
+    "declared_type_if_any": null,
+    "suffix_class": "date"
+  },
+  {
+    "view_name": "view_market_indicators",
+    "column_name": "updated_at",
+    "declared_type_if_any": null,
+    "suffix_class": "date"
+  }
+]
