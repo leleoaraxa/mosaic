@@ -3,6 +3,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from prometheus_client import make_asgi_app
 
+from app.executor.service import executor_service
 from app.registry.preloader import preload_views
 from app.observability.metrics import APP_UP, prime_api_series
 from app.observability.logging import (
@@ -13,6 +14,7 @@ from app.observability.logging import (
 from app.gateway.router import router as gateway_router
 from app.gateway.router import healthz_full
 from app.core.settings import settings
+from app.orchestrator.service import _refresh_tickers_cache
 
 # inicializa logging antes de criar app
 setup_json_logging(
@@ -32,6 +34,10 @@ async def lifespan(app: FastAPI):
     try:
         APP_UP.set(1)
         _ = healthz_full()
+        try:
+            _refresh_tickers_cache()  # aquece cache de tickers
+        except Exception as e:
+            logger.warning("warm-up tickers falhou: %s", e)
     except Exception:
         pass
 
@@ -50,6 +56,10 @@ async def lifespan(app: FastAPI):
     finally:
         APP_UP.set(0)
         task.cancel()
+        try:
+            executor_service.pool.close()
+        except Exception:
+            pass
 
 
 def create_app() -> FastAPI:

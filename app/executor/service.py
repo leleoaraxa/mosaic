@@ -6,6 +6,8 @@ import time
 import hashlib
 
 from psycopg.rows import dict_row
+from psycopg_pool import ConnectionPool
+from app.core.settings import settings
 from psycopg import sql
 from typing import List, Dict, Any
 
@@ -14,21 +16,31 @@ class ExecutorService:
     """Executor de consultas SQL read-only, com logs e métricas."""
 
     def __init__(self):
-        self.mode = os.environ.get("EXECUTOR_MODE", "read-only").lower()
-        self.dsn = os.environ.get("DATABASE_URL")
+        self.mode = settings.executor_mode.lower()
+        self.dsn = settings.database_url
         if not self.dsn:
             raise RuntimeError("DATABASE_URL não configurado")
+        # Pool de conexões da aplicação
+        self.pool = ConnectionPool(
+            conninfo=self.dsn,
+            min_size=settings.db_pool_min,
+            max_size=settings.db_pool_max,
+            kwargs={"autocommit": True},
+        )
 
     def _connect(self):
-        """Abre conexão read-only (se configurado)."""
-        conn = psycopg.connect(self.dsn, autocommit=True)
+        """Obtém uma conexão do pool e aplica read-only se configurado."""
+        conn_cm = self.pool.connection()
+        conn = (
+            conn_cm.__enter__()
+        )  # usamos explicitamente para aplicar flag e devolver no __exit__
         if self.mode == "read-only":
             try:
                 with conn.cursor() as cur:
-                    cur.execute("SET default_transaction_read_only = on;")
+                    cur.execute("SET SESSION CHARACTERISTICS AS TRANSACTION READ ONLY;")
             except Exception as e:
                 print(f"[Executor] aviso: não foi possível aplicar modo read-only: {e}")
-        return conn
+        return conn_cm  # devolvemos o context manager (que fecha no __exit__)
 
     def _hash_sql(self, sql: str) -> str:
         return hashlib.sha1(sql.encode("utf-8")).hexdigest()[:10]

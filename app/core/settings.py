@@ -43,6 +43,10 @@ class Settings(BaseSettings):
     views_cache_ttl: int = 86400
     tickers_cache_ttl: float = 300.0
 
+    # Pool de DB
+    db_pool_min: int = 1
+    db_pool_max: int = 10
+
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 
 

@@ -12,9 +12,13 @@ Todo o conteúdo de heurística e regras NL foi movido do gateway.
 """
 
 from __future__ import annotations
+
 import re, time, uuid, hashlib, unicodedata, logging
 from typing import Any, Dict, List, Optional
+import json
 
+from app.core.settings import settings
+from app.infrastructure.cache import get_cache_backend
 from app.registry.service import registry_service
 from app.extractors.normalizers import ExtractedRunRequest, normalize_request
 from app.builder.service import builder_service
@@ -28,7 +32,6 @@ from app.observability.metrics import (
     DB_ROWS,
     API_LATENCY_MS,
 )
-from app.core.settings import settings
 
 
 logger = logging.getLogger("orchestrator")
@@ -37,26 +40,44 @@ logger = logging.getLogger("orchestrator")
 # 🔹 Utilidades internas (mantêm semântica original)
 # ---------------------------------------------------------------------------
 # cache simples dos tickers válidos (para não consultar toda hora)
-_TICKERS_CACHE = {"ts": 0.0, "ttl": settings.tickers_cache_ttl, "set": set()}
+_CACHE = get_cache_backend()
+_TICKERS_KEY = "tickers:list:v1"  # será namespaced pelo NamespacedCache
+
+
+def _refresh_tickers_cache() -> list[str]:
+    """Recarrega do DB e salva no cache com TTL."""
+    rows = executor_service.run(
+        "SELECT ticker FROM view_fiis_info ORDER BY ticker;", {}
+    )
+    tickers = [str(r.get("ticker", "")).upper() for r in rows if r.get("ticker")]
+    try:
+        _CACHE.set(
+            _TICKERS_KEY,
+            json.dumps(tickers),
+            ttl_seconds=int(settings.tickers_cache_ttl),
+        )
+    except Exception as ex:
+        logger.warning(f"falha ao gravar tickers no cache: {ex}")
+    logger.info(f"cache de tickers atualizado: {len(tickers)} registros")
+    return tickers
 
 
 def _load_valid_tickers(force: bool = False) -> set[str]:
-    now = time.time()
-    if (
-        not force
-        and _TICKERS_CACHE["set"]
-        and (now - _TICKERS_CACHE["ts"] < _TICKERS_CACHE["ttl"])
-    ):
-        return _TICKERS_CACHE["set"]
+    """Obtém tickers do cache; se vazio/force, repovoa a partir do DB."""
+    if not force:
+        try:
+            raw = _CACHE.get(_TICKERS_KEY)
+            if raw:
+                data = json.loads(raw)
+                return set(data)
+        except Exception:
+            pass
+    # fallback: repopula
     try:
-        rows = executor_service.run("SELECT ticker FROM view_fiis_info;", {})
-        s = {str(r.get("ticker", "")).upper() for r in rows if r.get("ticker")}
-        _TICKERS_CACHE.update({"ts": now, "set": s})
-        logger.info(f"cache de tickers atualizado: {len(s)} registros")
-        return s
+        return set(_refresh_tickers_cache())
     except Exception as ex:
         logger.warning(f"falha ao atualizar cache de tickers: {ex}")
-        return _TICKERS_CACHE["set"] or set()
+        return set()
 
 
 def _unaccent_lower(s: str) -> str:
