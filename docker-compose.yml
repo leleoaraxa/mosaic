@@ -6,7 +6,6 @@ services:
       - "8000:8000"
     env_file: .env
     environment:
-      DATABASE_URL: ${DATABASE_URL}
       EXECUTOR_MODE: read-only
       MOSAIC_VERSION: "2025.10.15.1"
       GIT_SHA: "${GIT_SHA:-local}"

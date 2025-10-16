@@ -12,7 +12,7 @@ from app.formatter.serializer import to_human
         ("traded_until_date", datetime(2024, 5, 1, 13, 45), "01/05/2024"),
         ("created_at", "2024-05-01T10:30:00Z", "01/05/2024"),
         ("total_cash_amt", 1234.5, "R$ 1.234,50"),
-        ("dividend_amount", 321, "R$ 321,00"),
+        ("dividend_amt", 321, "R$ 321,00"),
         ("close_price", "9876.54", "R$ 9.876,54"),
         ("dividend_payout_pct", 0.1578, "15,78 %"),
         ("dy_pct", 0.789, "78,90 %"),

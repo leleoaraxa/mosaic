@@ -26,6 +26,7 @@ class ExecutorService:
             min_size=settings.db_pool_min,
             max_size=settings.db_pool_max,
             kwargs={"autocommit": True},
+            open=True,
         )
 
     def _connect(self):

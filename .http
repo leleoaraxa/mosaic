@@ -38,7 +38,7 @@ Content-Type: application/json
 {
   "entity": "view_fiis_history_dividends",
   "filters": { "ticker": "XPML11" },
-  "select": ["ticker","payment_date","dividend_amount"],
+  "select": ["ticker","payment_date","dividend_amt"],
   "order_by": { "field": "payment_date", "dir": "DESC" },
   "limit": 1
 }
@@ -100,7 +100,7 @@ POST http://localhost:8000/ask
 Content-Type: application/json
 
 {
-  "question": "últimos dividendos de HGLG e KNRI entre 01/01/2024 e 31/03/2024"
+  "question": "quais os últimos pagamentos de rendimentos do HGLG e KNRI entre 01/01/2024 e 31/03/2024"
 }
 
 
