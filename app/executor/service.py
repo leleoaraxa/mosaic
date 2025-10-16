@@ -6,9 +6,9 @@ import time
 import hashlib
 
 from psycopg.rows import dict_row
+from psycopg import sql
 from psycopg_pool import ConnectionPool
 from app.core.settings import settings
-from psycopg import sql
 from typing import List, Dict, Any
 
 
@@ -29,18 +29,8 @@ class ExecutorService:
         )
 
     def _connect(self):
-        """Obtém uma conexão do pool e aplica read-only se configurado."""
-        conn_cm = self.pool.connection()
-        conn = (
-            conn_cm.__enter__()
-        )  # usamos explicitamente para aplicar flag e devolver no __exit__
-        if self.mode == "read-only":
-            try:
-                with conn.cursor() as cur:
-                    cur.execute("SET SESSION CHARACTERISTICS AS TRANSACTION READ ONLY;")
-            except Exception as e:
-                print(f"[Executor] aviso: não foi possível aplicar modo read-only: {e}")
-        return conn_cm  # devolvemos o context manager (que fecha no __exit__)
+        """Retorna o context manager do pool sem ‘entrar’ aqui."""
+        return self.pool.connection()
 
     def _hash_sql(self, sql: str) -> str:
         return hashlib.sha1(sql.encode("utf-8")).hexdigest()[:10]
@@ -51,6 +41,17 @@ class ExecutorService:
         """Executa a query no Postgres e retorna as linhas."""
         start = time.perf_counter()
         with self._connect() as conn:
+            # aplica read-only na sessão se configurado
+            if self.mode == "read-only":
+                try:
+                    with conn.cursor() as c0:
+                        c0.execute(
+                            "SET SESSION CHARACTERISTICS AS TRANSACTION READ ONLY;"
+                        )
+                except Exception as e:
+                    print(
+                        f"[Executor] aviso: não foi possível aplicar modo read-only: {e}"
+                    )
             with conn.cursor(row_factory=dict_row) as cur:
                 cur.execute(sql, params or {})
                 rows = cur.fetchall()
