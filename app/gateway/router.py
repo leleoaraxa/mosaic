@@ -266,30 +266,6 @@ def _select_from_question_by_comments(
     return matches or None
 
 
-def _choose_entity_by_ask(question: str) -> str:
-    """
-    Escolhe entidade usando apenas ask.keywords (do COMMENT da view).
-    Fallback para view_fiis_info se ninguém pontuar.
-    """
-    qtok = set(_tokenize(question))
-    items = registry_service.list_all()
-    if not items:
-        raise HTTPException(400, "Catálogo vazio.")
-    best, best_score = None, -1
-    for it in items:
-        e = it["entity"]
-        meta = _ask_meta(e)
-        kws = set(_tokenize(" ".join(meta.get("keywords", []))))
-        desc_tokens = set(_tokenize((_meta(e).get("description") or "")))
-        bag = kws | desc_tokens
-        score = sum(1 for t in qtok if t in bag) if bag else 0
-        if score > best_score:
-            best, best_score = e, score
-    if best_score <= 0 and any(i["entity"] == "view_fiis_info" for i in items):
-        return "view_fiis_info"
-    return best or items[0]["entity"]
-
-
 def _rank_entities_by_ask(
     question: str, top_k: int = 3, min_ratio: float = 0.6
 ) -> list[str]:
