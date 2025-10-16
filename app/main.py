@@ -3,6 +3,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from prometheus_client import make_asgi_app
 
+from app.registry.preloader import preload_views
 from app.observability.metrics import APP_UP, prime_api_series
 from app.observability.logging import (
     setup_json_logging,
@@ -26,7 +27,7 @@ logger = get_logger("mosaic")
 async def lifespan(app: FastAPI):
     # Prime series para que apareçam no /metrics antes da primeira requisição
     prime_api_series()
-
+    preload_views()  # 🚀 carrega catálogo no boot (Redis/local)
     # primeira checagem de saúde imediata
     try:
         APP_UP.set(1)

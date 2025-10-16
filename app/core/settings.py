@@ -35,6 +35,14 @@ class Settings(BaseSettings):
     views_signature_key: Optional[str] = None
     views_signature_required: bool = False
 
+    # Redis
+    cache_backend: str = "local"  # local|redis
+    redis_url: str | None = None
+    cache_namespace: str = "mosaic"
+
+    views_cache_ttl: int = 86400
+    tickers_cache_ttl: float = 300.0
+
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 
 

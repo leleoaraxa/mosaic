@@ -293,8 +293,8 @@ def _load_valid_tickers(force: bool = False) -> set[str]:
 ```bash
 + app/
   ├── core/settings.py             ← novas vars (cache_backend, redis_url, etc.)
-  ├── infrastructure/cache.py      ← novo adapter (RedisCacheBackend + Local)
-  ├── registry/preloader.py        ← novo (boot + hash do catálogo)
+OK├── infrastructure/cache.py      ← novo adapter (RedisCacheBackend + Local)
+OK├── registry/preloader.py        ← novo (boot + hash do catálogo)
   ├── registry/service.py          ← usa preloader() + publica no cache
   ├── orchestrator/service.py      ← troca cache local → cache backend
   ├── main.py                      ← lifespan chama preloader() no startup
