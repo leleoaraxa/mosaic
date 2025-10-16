@@ -3,7 +3,7 @@ import os
 os.environ.setdefault("DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/postgres")
 
 from app.core.settings import settings
-from app.infrastructure.cache import LocalCacheBackend, NamespacedCache
+from app.infrastructure.cache import LocalCacheBackend, NamespacedCache, get_cache_backend
 from app.registry import preloader
 
 
@@ -36,3 +36,24 @@ def test_preload_views_local_vs_redis_parity(monkeypatch):
         assert cold_load == warm_load == local_catalog
     finally:
         settings.cache_backend = original_backend
+
+
+def test_get_cache_backend_fallback_without_redis(monkeypatch):
+    from app import infrastructure
+
+    original_backend = settings.cache_backend
+    original_url = settings.redis_url
+    try:
+        settings.cache_backend = "redis"
+        settings.redis_url = "redis://localhost:6379/0"
+
+        def _raise_module_not_found(url: str):  # pragma: no cover - behaviour asserted below
+            raise ModuleNotFoundError("redis")
+
+        monkeypatch.setattr(infrastructure.cache, "RedisCacheBackend", _raise_module_not_found)
+
+        backend = get_cache_backend()
+        assert isinstance(backend.inner, LocalCacheBackend)
+    finally:
+        settings.cache_backend = original_backend
+        settings.redis_url = original_url

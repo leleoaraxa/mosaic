@@ -117,7 +117,14 @@ class NamespacedCache(CacheBackend):
 def get_cache_backend() -> CacheBackend:
     """Seleciona backend com base nas settings (redis|local)."""
     if settings.cache_backend == "redis" and settings.redis_url:
-        backend = RedisCacheBackend(settings.redis_url)
+        try:
+            backend = RedisCacheBackend(settings.redis_url)
+        except ModuleNotFoundError:
+            # Redis client não instalado → fallback automático para cache local.
+            backend = LocalCacheBackend()
+        except Exception:
+            # Qualquer falha na conexão inicial também cai no fallback local.
+            backend = LocalCacheBackend()
     else:
         backend = LocalCacheBackend()
     return NamespacedCache(backend, prefix=settings.cache_namespace)
