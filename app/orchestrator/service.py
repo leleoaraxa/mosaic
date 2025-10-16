@@ -126,7 +126,7 @@ def _extract_tickers(text: str, valid: set[str]) -> list[str]:
 
 def _extract_dates_range(text: str) -> Dict[str, str]:
     m = re.search(
-        r"entre\\s+(\\d{2}/\\d{2}/\\d{4})\\s+e\\s+(\\d{2}/\\d{2}/\\d{4})",
+        r"entre\s+(\d{2}/\d{2}/\d{4})\s+e\s+(\d{2}/\d{2}/\d{4})",
         text,
         re.IGNORECASE,
     )
@@ -166,11 +166,15 @@ def _default_date_field(entity: str) -> Optional[str]:
     d = m.get("default_date_field")
     if d and d in _cols(entity):
         return d
-    # 🔹 heurística genérica por sufixos padrão
     cols = _cols(entity)
-    for cand in cols:
-        if any(cand.endswith(suf) for suf in ("_date", "_until", "_at")):
-            return cand
+    # ordem de preferência
+    for suf in ("_date", "_until"):
+        for c in cols:
+            if c.endswith(suf):
+                return c
+    for c in cols:
+        if c.endswith("_at"):
+            return c
     return None
 
 
@@ -226,12 +230,25 @@ def route_question(question: str) -> Dict[str, Any]:
     normalized: ExtractedRunRequest = normalize_request(base_req)
     sql, params = builder_service.build_sql(normalized)
 
+    entity = normalized.entity
+    date_field = _default_date_field(entity)
+
+    # log de depuração (leve e serializável)
+    logger.debug(
+        "ask.filters",
+        extra={
+            "request_id": req_id,
+            "entity": entity,
+            "filters": normalized.filters or {},
+            "date_field": date_field,
+        },
+    )
+
     # ---- Execução com métricas ----
     tdb0 = time.time()
     rows = executor_service.run(sql, params, row_limit=normalized.limit)
     elapsed_db_ms = (time.time() - tdb0) * 1000.0
 
-    entity = normalized.entity
     DB_LATENCY_MS.labels(entity=entity).observe(elapsed_db_ms)
     DB_QUERIES.labels(entity=entity).inc()
     DB_ROWS.labels(entity=entity).inc(len(rows))

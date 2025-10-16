@@ -305,6 +305,7 @@ COMMENT ON COLUMN view_fiis_info.updated_at IS 'Data da última atualização do
 ALTER MATERIALIZED VIEW public.view_fiis_info OWNER TO edge_user;
 REFRESH MATERIALIZED VIEW view_fiis_info;
 
+select * from view_fiis_history_dividends where ticker = 'KNRI11'
 -- =====================================================================
 -- VIEW: view_fiis_history_dividends
 -- =====================================================================
@@ -329,7 +330,7 @@ ORDER BY bt.ticker ASC, hd.traded_until DESC, hd.payment_date DESC;
 CREATE UNIQUE INDEX idx_fiis_hist_dividends
     ON view_fiis_history_dividends(ticker, traded_until_date, payment_date);
 
-COMMENT ON MATERIALIZED VIEW view_fiis_history_dividends IS 'Histórico de dividendos por FII.||ask:intents=dividends,historico;keywords=dividendo,provento,histórico,historico,último,mais recente;latest_words=último,mais recente';
+COMMENT ON MATERIALIZED VIEW view_fiis_history_dividends IS 'Histórico de dividendos por FII.||ask:intents=dividends,historico;keywords=dividendos,dividendo,rendimentos,rendimento,proventos,provento,histórico,historico,último,ultimo,mais recente;latest_words=último,mais recente,últimos,ultimos';
 COMMENT ON COLUMN view_fiis_history_dividends.ticker IS 'Ticker do FII.|Código FII';
 COMMENT ON COLUMN view_fiis_history_dividends.traded_until_date IS 'Data limite de negociação com direito ao dividendo.|Data limite de negociação';
 COMMENT ON COLUMN view_fiis_history_dividends.payment_date IS 'Data de pagamento do dividendo.|Data de pagamento';

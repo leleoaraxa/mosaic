@@ -26,7 +26,8 @@ class Settings(BaseSettings):
     log_backups: int = 3
 
     # Cache / limites / métricas
-    tickers_cache_ttl: float = 300.0  # segundos
+    views_cache_ttl: int = 86400
+    tickers_cache_ttl: float = 300.0
     ask_default_limit: int = 100
     ask_max_limit: int = 1000
     api_latency_window: int = 60  # segundos (janela para dashboards)
@@ -39,9 +40,6 @@ class Settings(BaseSettings):
     cache_backend: str = "local"  # local|redis
     redis_url: str | None = None
     cache_namespace: str = "mosaic"
-
-    views_cache_ttl: int = 86400
-    tickers_cache_ttl: float = 300.0
 
     # Pool de DB
     db_pool_min: int = 1

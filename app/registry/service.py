@@ -2,6 +2,7 @@
 import os
 from typing import Dict, Any, List, Optional
 from app.registry.loader import load_views
+from app.registry.preloader import preload_views
 
 
 class RegistryService:
@@ -10,8 +11,8 @@ class RegistryService:
         self.reload()
 
     def reload(self):
-        views_dir = os.environ.get("VIEWS_DIR", os.path.abspath("data/views"))
-        self._cache = load_views(views_dir)
+        # cache-first; se não houver no cache, o preloader carrega do disco e publica
+        self._cache = preload_views()
 
     def _colnames(self, entity: str) -> List[str]:
         meta = self._cache.get(entity) or {}
