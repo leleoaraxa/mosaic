@@ -1,5 +1,6 @@
-from prometheus_client import Counter, Histogram, Gauge
 import os
+
+from prometheus_client import Counter, Gauge, Histogram
 
 APP_VERSION = os.environ.get("MOSAIC_VERSION", "dev")
 GIT_SHA = os.environ.get("GIT_SHA", "local")

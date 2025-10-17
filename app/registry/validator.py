@@ -8,9 +8,12 @@ Valida apenas a estrutura mínima de cada arquivo:
 - ask: dict (com subtópicos opcionais)
 """
 
+import hashlib
+import hmac
 from typing import Any, Dict, List, Optional
+
 from pydantic import BaseModel, Field, ValidationError
-import hashlib, hmac
+
 from app.core.settings import settings
 
 

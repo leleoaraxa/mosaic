@@ -1,7 +1,8 @@
 # app/builder/service.py
-from typing import Tuple, Dict, Any, List
-from app.registry.service import registry_service
+from typing import Any, Dict, Tuple
+
 from app.extractors.normalizers import ExtractedRunRequest
+from app.registry.service import registry_service
 
 
 class BuilderService:

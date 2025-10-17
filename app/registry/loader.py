@@ -1,9 +1,12 @@
 # app/registry/loader.py
-import os, yaml
-from typing import Dict, Any
 import logging
-from app.registry.validator import validate_yaml_structure, verify_signature
+import os
+from typing import Any, Dict
+
+import yaml
+
 from app.core.settings import settings
+from app.registry.validator import validate_yaml_structure, verify_signature
 
 logger = logging.getLogger("registry.loader")
 

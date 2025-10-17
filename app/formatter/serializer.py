@@ -1,8 +1,8 @@
 # app/formatter/serializer.py
-from typing import List, Dict, Any, Optional, Union
-from datetime import datetime, date
 import re
-from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
+from datetime import date, datetime
+from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
+from typing import Any, Dict, List, Optional, Union
 
 Number = Union[int, float, Decimal]
 

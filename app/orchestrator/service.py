@@ -13,26 +13,29 @@ Todo o conteúdo de heurística e regras NL foi movido do gateway.
 
 from __future__ import annotations
 
-import re, time, uuid, hashlib, unicodedata, logging
-from typing import Any, Dict, List, Optional
 import json
+import logging
+import re
+import time
+import unicodedata
+import uuid
+from typing import Any, Dict, Optional
 
-from app.core.settings import settings
-from app.infrastructure.cache import get_cache_backend
-from app.registry.service import registry_service
-from app.extractors.normalizers import ExtractedRunRequest, normalize_request
 from app.builder.service import builder_service
+from app.core.settings import settings
 from app.executor.service import executor_service
+from app.extractors.normalizers import ExtractedRunRequest, normalize_request
 from app.formatter.serializer import to_human
+from app.infrastructure.cache import get_cache_backend
 from app.observability.metrics import (
+    API_LATENCY_MS,
     ASK_LATENCY_MS,
     ASK_ROWS,
     DB_LATENCY_MS,
     DB_QUERIES,
     DB_ROWS,
-    API_LATENCY_MS,
 )
-
+from app.registry.service import registry_service
 
 logger = logging.getLogger("orchestrator")
 

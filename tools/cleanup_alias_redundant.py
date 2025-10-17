@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
-import os, sys, yaml
+import os
+
+import yaml
 
 VIEWS_DIR = os.environ.get("VIEWS_DIR", os.path.abspath("data/views"))
 

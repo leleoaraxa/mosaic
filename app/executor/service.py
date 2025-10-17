@@ -1,15 +1,46 @@
 # app/executor/service.py
-import os
-import re
-import psycopg
-import time
 import hashlib
+import re
+import time
+from typing import Any, Dict, List
 
-from psycopg.rows import dict_row
 from psycopg import sql
-from psycopg_pool import ConnectionPool
+from psycopg.rows import dict_row
+
+try:
+    from psycopg_pool import ConnectionPool
+except ModuleNotFoundError:
+    from contextlib import contextmanager
+
+    import psycopg
+
+    class ConnectionPool:  # type: ignore[no-redef]
+        """Fallback simples quando psycopg_pool não está disponível."""
+
+        def __init__(
+            self,
+            conninfo: str,
+            min_size: int = 1,
+            max_size: int = 1,
+            kwargs: Dict[str, Any] | None = None,
+            open: bool = True,
+        ) -> None:
+            self._conninfo = conninfo
+            self._kwargs = kwargs or {}
+
+        @contextmanager
+        def connection(self):  # type: ignore[override]
+            conn = psycopg.connect(self._conninfo, **self._kwargs)
+            try:
+                yield conn
+            finally:
+                conn.close()
+
+        def close(self) -> None:
+            """Compatibilidade com API do psycopg_pool.ConnectionPool."""
+            return None
+
 from app.core.settings import settings
-from typing import List, Dict, Any
 
 
 class ExecutorService:

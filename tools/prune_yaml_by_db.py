@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
-import os, sys, glob, yaml
-from app.registry.service import registry_service
+import os
+import sys
+
 from app.executor.service import executor_service
+from app.registry.service import registry_service
 
 
 def main():
@@ -21,7 +23,7 @@ def main():
                 # aqui consideramos "prune" apenas quando o DB responde "relation does not exist"
                 # mas como o columns_for já levanta isso, se chegou vazio, tratamos como prune
                 prune.append(e)
-        except Exception as ex:
+        except Exception:
             # relação inexistente, vai para prune
             prune.append(e)
 

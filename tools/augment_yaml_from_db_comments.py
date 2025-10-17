@@ -27,13 +27,13 @@ Flags:
   --overwrite-columns     : força reescrever description/alias das colunas
 """
 
+import argparse
 import os
 import sys
-import argparse
-from typing import Dict, Any, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
-import yaml
 import psycopg
+import yaml
 
 VIEWS_DIR = os.environ.get("VIEWS_DIR", os.path.abspath("data/views"))
 SCHEMA = os.environ.get("DB_SCHEMA", "public")
