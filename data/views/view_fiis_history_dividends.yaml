@@ -41,12 +41,22 @@ ask:
   - proventos
   - provento
   - histórico
-  - historico
   - último
-  - ultimo
+  - mais recente
+  synonyms.dividends:
+  - dividendos
+  - rendimentos
+  - proventos
+  - pagamentos
+  synonyms.latest:
+  - último
+  - últimos
   - mais recente
   latest_words:
   - último
-  - mais recente
   - últimos
-  - ultimos
+  - mais recente
+  weights.keywords:
+  - '1'
+  weights.synonyms:
+  - '2'

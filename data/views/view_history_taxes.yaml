@@ -73,3 +73,14 @@ ask:
   - euro
   - diário
   - poupança
+  - juros
+  - índices
+  synonyms.taxas:
+  - taxas
+  - juros
+  - índices
+  - indicadores
+  weights.keywords:
+  - '1'
+  weights.synonyms:
+  - '2'

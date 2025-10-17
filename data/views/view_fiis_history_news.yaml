@@ -51,8 +51,23 @@ ask:
   - título
   - fonte
   - matéria
-  - histórico
   - divulgação
+  - publicação
+  synonyms.news:
+  - notícia
+  - noticias
+  - manchete
+  - publicação
+  - divulgação
+  synonyms.latest:
+  - último
+  - últimos
+  - mais recente
   latest_words:
   - último
+  - últimos
   - mais recente
+  weights.keywords:
+  - '1'
+  weights.synonyms:
+  - '2'

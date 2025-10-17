@@ -56,3 +56,15 @@ ask:
   - instância
   - valor da causa
   - riscos
+  - litígio
+  - decisão
+  synonyms.judicial:
+  - processo
+  - ação
+  - litígio
+  - demanda
+  - causa
+  weights.keywords:
+  - '1'
+  weights.synonyms:
+  - '2'

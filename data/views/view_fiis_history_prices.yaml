@@ -46,14 +46,28 @@ ask:
   - historico
   keywords:
   - preço
-  - precos
+  - preços
   - fechamento
   - abertura
   - alta
   - baixa
   - histórico
-  - serie temporal
   - gráfico
+  - cotação
+  synonyms.precos:
+  - preço
+  - cotação
+  - valor
+  - fechamento
+  synonyms.latest:
+  - último
+  - últimos
+  - mais recente
   latest_words:
   - último
+  - últimos
   - mais recente
+  weights.keywords:
+  - '1'
+  weights.synonyms:
+  - '2'

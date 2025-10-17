@@ -252,3 +252,14 @@ ask:
   - site
   - administrador
   - custodiante
+  - gestor
+  synonyms.cadastro:
+  - cadastro
+  - dados
+  - perfil
+  - ficha
+  - informações
+  weights.keywords:
+  - '1'
+  weights.synonyms:
+  - '2'

@@ -37,3 +37,14 @@ ask:
   - dólar
   - euro
   - indicadores
+  - benchmark
+  - referência
+  synonyms.indicadores:
+  - indicadores
+  - índices
+  - taxas
+  - benchmarks
+  weights.keywords:
+  - '1'
+  weights.synonyms:
+  - '2'

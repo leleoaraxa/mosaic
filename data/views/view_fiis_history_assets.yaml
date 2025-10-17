@@ -55,3 +55,14 @@ ask:
   - ativos
   - asset
   - endereço
+  - localização
+  synonyms.ativos:
+  - imóveis
+  - ativos
+  - bens
+  - propriedades
+  - portfólio
+  weights.keywords:
+  - '1'
+  weights.synonyms:
+  - '2'

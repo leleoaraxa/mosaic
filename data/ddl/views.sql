@@ -223,7 +223,7 @@ CREATE INDEX IF NOT EXISTS idx_fiis_info_classification_unaccent ON view_fiis_in
 CREATE INDEX IF NOT EXISTS idx_fiis_info_management_type_unaccent ON view_fiis_info (public.unaccent_ci(management_type));
 CREATE INDEX IF NOT EXISTS idx_fiis_info_target_market_unaccent ON view_fiis_info (public.unaccent_ci(target_market));
 
-COMMENT ON MATERIALIZED VIEW view_fiis_info IS 'Informações sobre cada FII listado (1 linha por fundo).||ask:intents=cadastro,perfil,info;keywords=cadastro,dados,ficha,cnpj,site,administrador,custodiante';
+COMMENT ON MATERIALIZED VIEW view_fiis_info IS 'Informações cadastrais completas de cada Fundo Imobiliário listado na B3 (1 linha por fundo).||ask:intents=cadastro,perfil,info;keywords=cadastro,dados,ficha,cnpj,site,administrador,custodiante,gestor;synonyms.cadastro=cadastro,dados,perfil,ficha,informações;weights.keywords=1;weights.synonyms=2;';
 COMMENT ON COLUMN view_fiis_info.ticker IS 'Código do fundo na B3.|Código FII';
 COMMENT ON COLUMN view_fiis_info.fii_cnpj IS 'CNPJ do FII (identificador único).|CNPJ';
 COMMENT ON COLUMN view_fiis_info.ticker_full_name IS 'Nome completo do ticker.|Nome completo';
@@ -305,7 +305,6 @@ COMMENT ON COLUMN view_fiis_info.updated_at IS 'Data da última atualização do
 ALTER MATERIALIZED VIEW public.view_fiis_info OWNER TO edge_user;
 REFRESH MATERIALIZED VIEW view_fiis_info;
 
-select * from view_fiis_history_dividends where ticker = 'KNRI11'
 -- =====================================================================
 -- VIEW: view_fiis_history_dividends
 -- =====================================================================
@@ -330,7 +329,8 @@ ORDER BY bt.ticker ASC, hd.traded_until DESC, hd.payment_date DESC;
 CREATE UNIQUE INDEX idx_fiis_hist_dividends
     ON view_fiis_history_dividends(ticker, traded_until_date, payment_date);
 
-COMMENT ON MATERIALIZED VIEW view_fiis_history_dividends IS 'Histórico de dividendos por FII.||ask:intents=dividends,historico;keywords=dividendos,dividendo,rendimentos,rendimento,proventos,provento,histórico,historico,último,ultimo,mais recente;latest_words=último,mais recente,últimos,ultimos';
+
+COMMENT ON MATERIALIZED VIEW view_fiis_history_dividends IS 'Histórico detalhado de dividendos distribuídos por cada FII, incluindo datas de pagamento e valores declarados.||ask:intents=dividends,historico;keywords=dividendos,dividendo,rendimentos,rendimento,proventos,provento,histórico,último,mais recente;synonyms.dividends=dividendos,rendimentos,proventos,pagamentos;synonyms.latest=último,últimos,mais recente;latest_words=último,últimos,mais recente;weights.keywords=1;weights.synonyms=2;';
 COMMENT ON COLUMN view_fiis_history_dividends.ticker IS 'Ticker do FII.|Código FII';
 COMMENT ON COLUMN view_fiis_history_dividends.traded_until_date IS 'Data limite de negociação com direito ao dividendo.|Data limite de negociação';
 COMMENT ON COLUMN view_fiis_history_dividends.payment_date IS 'Data de pagamento do dividendo.|Data de pagamento';
@@ -386,7 +386,7 @@ ORDER BY bt.ticker ASC;
 CREATE UNIQUE INDEX idx_fiis_assets
     ON view_fiis_history_assets(ticker, asset_class, asset_name, asset_address, assets_status);
 
-COMMENT ON MATERIALIZED VIEW view_fiis_history_assets IS 'Ativos (imóveis) pertencentes a cada FII.||ask:intents=ativos,imoveis;keywords=imóvel,imoveis,ativo,ativos,asset,endereço';
+COMMENT ON MATERIALIZED VIEW view_fiis_history_assets IS 'Relação completa dos ativos e imóveis integrantes do portfólio de cada FII, com localização e características principais.||ask:intents=ativos,imoveis;keywords=imóvel,imoveis,ativo,ativos,asset,endereço,localização;synonyms.ativos=imóveis,ativos,bens,propriedades,portfólio;weights.keywords=1;weights.synonyms=2;';
 COMMENT ON COLUMN view_fiis_history_assets.ticker IS 'Ticker do FII.|Código FII';
 COMMENT ON COLUMN view_fiis_history_assets.asset_name IS 'Nome do ativo (imóvel).|Nome do ativo';
 COMMENT ON COLUMN view_fiis_history_assets.asset_class IS 'Classe de ativo.|Classe';
@@ -432,7 +432,7 @@ ORDER BY bt.ticker ASC;
 CREATE UNIQUE INDEX idx_fiis_judicial
     ON view_fiis_history_judicial(ticker, process_number);
 
-COMMENT ON MATERIALIZED VIEW view_fiis_history_judicial IS 'Processos judiciais relacionados a cada FII.||ask:intents=judicial,processos;keywords=judicial,processo,ação,instância,valor da causa,riscos';
+COMMENT ON MATERIALIZED VIEW view_fiis_history_judicial IS 'Processos judiciais e ações legais associadas a cada Fundo Imobiliário, incluindo número do processo, valor da causa e status da instância.||ask:intents=judicial,processos;keywords=judicial,processo,ação,instância,valor da causa,riscos,litígio,decisão;synonyms.judicial=processo,ação,litígio,demanda,causa;weights.keywords=1;weights.synonyms=2;';
 COMMENT ON COLUMN view_fiis_history_judicial.ticker IS 'Ticker do FII.|Código FII';
 COMMENT ON COLUMN view_fiis_history_judicial.process_number IS 'Número do processo judicial.|Identificador do processo';
 COMMENT ON COLUMN view_fiis_history_judicial.judgment IS 'Local ou instância do julgamento.|Órgão julgador';
@@ -473,7 +473,7 @@ ORDER BY bt.ticker ASC, p.price_ref_date DESC;
 CREATE UNIQUE INDEX idx_fiis_history_prices
     ON view_fiis_history_prices(ticker, price_date);
 
-COMMENT ON MATERIALIZED VIEW view_fiis_history_prices IS 'Histórico de preços dos FIIs.||ask:intents=precos,historico;keywords=preço,precos,fechamento,abertura,alta,baixa,histórico,serie temporal,gráfico;latest_words=último,mais recente';
+COMMENT ON MATERIALIZED VIEW view_fiis_history_prices IS 'Série temporal de preços dos FIIs, contemplando valores de abertura, fechamento, máxima e mínima.||ask:intents=precos,historico;keywords=preço,preços,fechamento,abertura,alta,baixa,histórico,gráfico,cotação;synonyms.precos=preço,cotação,valor,fechamento;synonyms.latest=último,últimos,mais recente;latest_words=último,últimos,mais recente;weights.keywords=1;weights.synonyms=2;';
 COMMENT ON COLUMN view_fiis_history_prices.ticker IS 'Ticker do FII.|Código FII';
 COMMENT ON COLUMN view_fiis_history_prices.price_date IS 'Data de referência do preço.|Data de referência';
 COMMENT ON COLUMN view_fiis_history_prices.close_price IS 'Preço de fechamento.|Fechamento';
@@ -517,7 +517,7 @@ CREATE INDEX IF NOT EXISTS idx_news_ticker_date
 ON view_fiis_history_news (ticker, news_date DESC);
 
 
-COMMENT ON MATERIALIZED VIEW view_fiis_history_news IS 'Notícias relacionadas aos FIIs.||ask:intents=noticias,news;keywords=notícia,noticias,news,título,fonte,matéria,histórico,divulgação;latest_words=último,mais recente';
+COMMENT ON MATERIALIZED VIEW view_fiis_history_news IS 'Notícias e publicações relacionadas aos Fundos Imobiliários, agregadas por fonte e data de divulgação.||ask:intents=noticias,news;keywords=notícia,noticias,news,título,fonte,matéria,divulgação,publicação;synonyms.news=notícia,noticias,manchete,publicação,divulgação;synonyms.latest=último,últimos,mais recente;latest_words=último,últimos,mais recente;weights.keywords=1;weights.synonyms=2;';
 COMMENT ON COLUMN view_fiis_history_news.ticker IS 'Ticker do FII.|Código FII';
 COMMENT ON COLUMN view_fiis_history_news.news_url IS 'URL da notícia.|Link da notícia';
 COMMENT ON COLUMN view_fiis_history_news.news_source IS 'Fonte do conteúdo da notícia.|Origem';
@@ -553,7 +553,7 @@ ORDER BY hi.date_indicators DESC, hi.slug_indicators ASC;
 CREATE UNIQUE INDEX idx_market_indicators
     ON view_market_indicators(indicator_date, indicator_name);
 
-COMMENT ON MATERIALIZED VIEW view_market_indicators IS 'Indicadores de mercado históricos.||ask:intents=indicadores,mercado;keywords=ifix,ifil,ibov,cdi,selic,dólar,euro,indicadores';
+COMMENT ON MATERIALIZED VIEW view_market_indicators IS 'Indicadores e índices de mercado relevantes para o universo de FIIs, como IFIX, CDI, SELIC, dólar e euro.||ask:intents=indicadores,mercado;keywords=ifix,ifil,ibov,cdi,selic,dólar,euro,indicadores,benchmark,referência;synonyms.indicadores=indicadores,índices,taxas,benchmarks;weights.keywords=1;weights.synonyms=2;';
 COMMENT ON COLUMN view_market_indicators.indicator_date IS 'Data de referência do indicador.|Data';
 COMMENT ON COLUMN view_market_indicators.indicator_name IS 'Nome ou identificador do indicador.|Indicador';
 COMMENT ON COLUMN view_market_indicators.indicator_amt IS 'Valor registrado do indicador.|Valor';
@@ -593,7 +593,7 @@ ORDER BY ht.date_taxes DESC;
 CREATE UNIQUE INDEX idx_history_taxes
     ON view_history_taxes(tax_date);
 
-COMMENT ON MATERIALIZED VIEW view_history_taxes IS 'Histórico diário de taxas e índices.||ask:intents=taxas,diario;keywords=ifix,ifil,ibov,cdi,selic,dólar,euro,diário,poupança';
+COMMENT ON MATERIALIZED VIEW view_history_taxes IS 'Séries históricas de taxas financeiras e índices econômicos diários, incluindo CDI, SELIC e poupança.||ask:intents=taxas,diario;keywords=ifix,ifil,ibov,cdi,selic,dólar,euro,diário,poupança,juros,índices;synonyms.taxas=taxas,juros,índices,indicadores;weights.keywords=1;weights.synonyms=2;';
 COMMENT ON COLUMN view_history_taxes.tax_date IS 'Data de referência.|Data';
 COMMENT ON COLUMN view_history_taxes.cdi_rate_pct IS 'Taxa CDI (%).|CDI';
 COMMENT ON COLUMN view_history_taxes.selic_rate_pct IS 'Taxa SELIC (%).|SELIC';
