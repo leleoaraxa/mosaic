@@ -36,6 +36,110 @@ logger = logging.getLogger("orchestrator")
 _CACHE = get_cache_backend()
 _TICKERS_KEY = "tickers:list:v1"  # será namespaced pelo NamespacedCache
 
+# ---------------------------------------------------------------------------
+# 🔹 Heurística global de intenção (tokens → label)
+# ---------------------------------------------------------------------------
+
+# Mapeia tokens típicos para um rótulo de intenção “global”.
+INTENT_TOKENS: Dict[str, List[str]] = {
+    "indicadores": [
+        "ipca",
+        "igpm",
+        "incc",
+        "selic",
+        "cdi",
+        "inflacao",
+        "projecao",
+        "infla",
+    ],
+    "judicial": [
+        "processo",
+        "processos",
+        "judicial",
+        "judiciais",
+        "litigio",
+        "litigios",
+        "civel",
+        "civeis",
+        "trabalhista",
+        "cvm",
+        "administrativo",
+        "administrativos",
+    ],
+    "ativos": [
+        "ativo",
+        "ativos",
+        "imovel",
+        "imoveis",
+        "portfolio",
+        "galpao",
+        "galpoes",
+        "shopping",
+        "shoppings",
+        "loja",
+        "lojas",
+        "empreendimento",
+        "empreendimentos",
+        "ancorada",
+        "ancoradas",
+        "cri",
+        "cris",
+        "papeis",
+    ],
+    "precos": [
+        "preco",
+        "precos",
+        "cotacao",
+        "subiu",
+        "caiu",
+        "tendencia",
+        "media",
+        "movel",
+        "grafico",
+        "valeu",
+        "variacao",
+    ],
+    "cadastro": [
+        "cnpj",
+        "administrador",
+        "custodiante",
+        "gestao",
+        "ativa",
+        "passiva",
+        "publico",
+        "alvo",
+        "ipo",
+        "isin",
+        "segmento",
+        "website",
+        "site",
+        "exclusivo",
+        "p",
+        "vp",
+        "pvp",
+        "cap",
+        "rate",
+        "payout",
+        "retorno",
+        "por",
+        "cota",
+        "enterprise",
+        "value",
+        "ev",
+        "equity",
+        "growth",
+        "crescimento",
+        "constitui",
+        "valor",
+        "mercado",
+        "nome",
+        "b3",
+        "tipo",
+        "fundo",
+    ],
+    "historico": ["historico", "historico", "historicos", "mes", "mensal"],
+    "dividends": ["dividendo", "dividendos", "pagou", "distribuiu", "repasse", "dy"],
+}
 
 # ---------------------------------------------------------------------------
 # 🔹 Cache e utilidades básicas
@@ -85,6 +189,33 @@ def _unaccent_lower(value: str) -> str:
         for c in unicodedata.normalize("NFD", value)
         if unicodedata.category(c) != "Mn"
     ).lower()
+
+
+def _guess_intent(tokens: List[str]) -> Optional[str]:
+    """
+    Heurística simples: conta hits por família e retorna a mais frequente.
+    Empate → None (para não enviesar indevidamente).
+    """
+    if not tokens:
+        return None
+    counts: Dict[str, int] = {}
+    tset = set(tokens)
+    for intent, words in INTENT_TOKENS.items():
+        hits = sum(1 for w in words if w in tset)
+        if hits:
+            counts[intent] = hits
+    if not counts:
+        return None
+    # pega a maior contagem; evita enviesar em empate
+    best = max(counts.values())
+    winners = [k for k, v in counts.items() if v == best]
+    if len(winners) == 1:
+        return winners[0]
+    return None
+
+
+def _intent_matches(entity_intents: List[str], target: Optional[str]) -> bool:
+    return bool(target and entity_intents and target in set(entity_intents))
 
 
 def _tokenize(text: str) -> List[str]:
@@ -189,7 +320,9 @@ def _ask_meta(entity: str) -> Dict[str, Any]:
     return meta
 
 
-def _score_entity(tokens: List[str], entity: str) -> Tuple[float, Optional[str]]:
+def _score_entity(
+    tokens: List[str], entity: str, guessed: Optional[str]
+) -> Tuple[float, Optional[str]]:
     ask_meta = _ask_meta(entity)
     weights = ask_meta.get("weights", {})
 
@@ -209,7 +342,18 @@ def _score_entity(tokens: List[str], entity: str) -> Tuple[float, Optional[str]]
     desc_tokens = set(_tokenize((_meta(entity).get("description") or "")))
     score_desc = sum(1 for t in tokens if t in desc_tokens) * 0.5
 
-    total = score_keywords + best_intent_score + score_desc
+    # Bônus por compatibilidade com a intenção global inferida
+    # - Se a melhor intenção derivada de sinônimos coincide com 'guessed', bônus maior.
+    # - Se 'guessed' está na lista de intents declarados da view, bônus adicional.
+    bonus = 0.0
+    if guessed:
+        if best_intent and guessed == best_intent:
+            bonus += 3.0  # forte aderência
+        if _intent_matches(ask_meta.get("intents") or [], guessed):
+            bonus += 2.0  # a view declara essa família
+
+    total = score_keywords + best_intent_score + score_desc + bonus
+
     if not best_intent:
         intents = ask_meta.get("intents") or []
         if intents:
@@ -219,6 +363,7 @@ def _score_entity(tokens: List[str], entity: str) -> Tuple[float, Optional[str]]
 
 def _choose_entity_by_ask(question: str) -> Tuple[Optional[str], Optional[str], float]:
     tokens = _tokenize(question)
+    guessed = _guess_intent(tokens)
     items = registry_service.list_all()
     if not items:
         raise ValueError("Catálogo vazio.")
@@ -227,7 +372,7 @@ def _choose_entity_by_ask(question: str) -> Tuple[Optional[str], Optional[str], 
     best_score = 0.0
     for it in items:
         entity = it["entity"]
-        score, intent = _score_entity(tokens, entity)
+        score, intent = _score_entity(tokens, entity, guessed)
         if score > best_score:
             best_entity = entity
             best_intent = intent
@@ -242,17 +387,41 @@ def _choose_entity_by_ask(question: str) -> Tuple[Optional[str], Optional[str], 
 
 def _choose_entities_by_ask(question: str) -> List[Tuple[str, str, float]]:
     tokens = _tokenize(question)
+    guessed = _guess_intent(tokens)
     items = registry_service.list_all()
     results: List[Tuple[str, str, float]] = []
 
     for it in items:
         entity = it["entity"]
-        score, intent = _score_entity(tokens, entity)
+        score, intent = _score_entity(tokens, entity, guessed)
         if score > 0:
             results.append((entity, intent, score))
+    # Se houver intenção global inferida, mantenha primeiro os compatíveis
+    if guessed:
+        compat: List[Tuple[str, str, float]] = []
+        incomp: List[Tuple[str, str, float]] = []
+        for entity, intent, score in results:
+            am = _ask_meta(entity)
+            if intent == guessed or _intent_matches(am.get("intents") or [], guessed):
+                compat.append((entity, intent, score))
+            else:
+                incomp.append((entity, intent, score))
+        # Ordena cada bloco e concatena com compatíveis primeiro
+        compat.sort(key=lambda x: x[2], reverse=True)
+        incomp.sort(key=lambda x: x[2], reverse=True)
+        results = compat + incomp
+    else:
+        # ordena decrescente por score
+        results.sort(key=lambda x: x[2], reverse=True)
+
+    # Se a 1ª opção domina a 2ª (margem clara), trunca para Top-1
+    if len(results) >= 2:
+        s1 = results[0][2]
+        s2 = results[1][2]
+        if s2 <= 0 or s1 >= (1.5 * s2):
+            results = [results[0]]
 
     # ordena decrescente por score
-    results.sort(key=lambda x: x[2], reverse=True)
     return results
 
 
@@ -551,6 +720,7 @@ def route_question(payload: Dict[str, Any]) -> Dict[str, Any]:
     results: Dict[str, Any] = {}
     planner_entities: List[Dict[str, Any]] = []
     rows_by_intent: Dict[str, int] = {}
+    primary_key: Optional[str] = None
 
     for entity, intent, score in selected:
         plan = _plan_question(question, entity, intent, payload)
@@ -570,6 +740,8 @@ def route_question(payload: Dict[str, Any]) -> Dict[str, Any]:
 
         data = to_human(rows)
         key = intent or entity_label
+        if primary_key is None:
+            primary_key = key
         results[key] = data
         planner_entities.append({"intent": intent, "entity": entity_label})
         rows_by_intent[key] = len(rows)
@@ -592,7 +764,11 @@ def route_question(payload: Dict[str, Any]) -> Dict[str, Any]:
         "results": results,
         "meta": {
             "elapsed_ms": int(elapsed_total),
-            "rows_total": sum(rows_by_intent.values()),
+            "rows_total": (
+                rows_by_intent.get(primary_key)
+                if primary_key
+                else sum(rows_by_intent.values())
+            ),
             "rows_by_intent": rows_by_intent,
             "limits": {"top_k": settings.ask_top_k},
         },
