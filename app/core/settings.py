@@ -1,11 +1,12 @@
-# app/core/settings.py
-"""
-Configurações centrais do Sirios Mosaic.
-Usa pydantic-settings para permitir overrides via .env ou variáveis do Docker.
-"""
+"""Configurações centrais do Sirios Mosaic."""
 
-from typing import Optional
+from __future__ import annotations
 
+from functools import lru_cache
+from pathlib import Path
+from typing import Any, Dict, Optional
+
+import yaml
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -32,6 +33,11 @@ class Settings(BaseSettings):
     ask_default_limit: int = 100
     ask_max_limit: int = 1000
     api_latency_window: int = 60  # segundos (janela para dashboards)
+    messages_path: str = "app/core/messages.yaml"
+
+    # NLP / orchestrator
+    nlp_relative_dates: bool = True
+
     # Assinatura de YAMLs (endurecimento opcional do pipeline)
     views_signature_mode: str = "none"  # none|sha256|hmac
     views_signature_key: Optional[str] = None
@@ -48,5 +54,33 @@ class Settings(BaseSettings):
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 
+    # --- mensagens utilitárias ---
+    @property
+    def messages(self) -> Dict[str, Any]:
+        return _load_messages(self.messages_path)
+
+    def get_message(self, *keys: str, default: Optional[str] = None) -> Optional[str]:
+        current: Any = self.messages
+        for key in keys:
+            if not isinstance(current, dict):
+                return default
+            current = current.get(key)
+        if isinstance(current, str):
+            return current
+        return default
+
 
 settings = Settings()
+
+
+@lru_cache(maxsize=1)
+def _load_messages(path: str) -> Dict[str, Any]:
+    try:
+        data = yaml.safe_load(Path(path).read_text(encoding="utf-8"))
+        if isinstance(data, dict):
+            return data
+    except FileNotFoundError:
+        return {}
+    except Exception:
+        return {}
+    return {}

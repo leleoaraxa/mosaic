@@ -49,6 +49,11 @@ class RegistryService:
     def get_columns(self, entity: str) -> List[str]:
         return self._colnames(entity)
 
+    def get_ask_block(self, entity: str) -> Dict[str, Any]:
+        meta = self._cache.get(entity) or {}
+        ask = meta.get("ask") or {}
+        return dict(ask)
+
     def get_identifiers(self, entity: str) -> List[str]:
         meta = self._cache.get(entity) or {}
         return meta.get("identifiers", [])

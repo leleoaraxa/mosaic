@@ -1,0 +1,7 @@
+ask:
+  status:
+    ok: "Tudo certo!"
+  fallback:
+    intent_unmatched: |
+      Não encontramos uma intenção para a sua pergunta. Tente especificar o tipo de
+      informação desejada (ex.: "dividendos do HGLG11").
