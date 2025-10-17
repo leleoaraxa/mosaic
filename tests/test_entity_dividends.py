@@ -7,7 +7,7 @@ def test_extract_dates_and_filter_dividends():
     # 1) entidade correta
     assert req["entity"] == "view_fiis_history_dividends"
     # 2) datas extraídas
-    assert req["filters"]["date_from"] == "01/01/2024"
-    assert req["filters"]["date_to"] == "30/06/2024"
+    assert req["filters"]["date_from"] == "2024-01-01"
+    assert req["filters"]["date_to"] == "2024-06-30"
     # 3) campo de data escolhido sensato
     assert _default_date_field(req["entity"]) in ("traded_until_date", "payment_date")

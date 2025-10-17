@@ -1,12 +1,36 @@
-# tests/test_integration_pg.py
 import re
+from datetime import date
 
+import pytest
 from fastapi.testclient import TestClient
 
+from app.executor.service import executor_service
 from app.main import app
 from app.registry.service import registry_service
 
 client = TestClient(app)
+
+
+@pytest.fixture(autouse=True)
+def stub_executor(monkeypatch):
+    sample_rows = [
+        {
+            "ticker": "VINO11",
+            "created_at": date(2024, 3, 1),
+            "updated_at": date(2024, 3, 2),
+            "cnpj": "00.000.000/0000-00",
+        }
+    ]
+
+    def _fake_run(sql, params, row_limit=100):
+        return sample_rows
+
+    def _fake_columns(entity: str):
+        return registry_service.get_columns(entity)
+
+    monkeypatch.setattr(executor_service, "run", _fake_run)
+    monkeypatch.setattr(executor_service, "columns_for", _fake_columns)
+    yield
 
 
 def _has_br_date(s: str) -> bool:
@@ -24,14 +48,18 @@ def test_e2e_ask_real_db_and_formatter():
     r = client.post("/ask", json={"question": "me mostra o cadastro do VINO11"})
     assert r.status_code == 200, r.text
     payload = r.json()
-    assert payload["entity"] == "view_fiis_info"
-    rows = payload.get("rows", 0)
-    data = payload.get("data", [])
-    assert rows == len(data) and rows >= 1
+    planner = payload["planner"]
+    assert planner["entities"][0]["entity"] == "view_fiis_info"
+
+    results = payload.get("results", {})
+    assert results, "sem resultados"
+    intent_key, data = next(iter(results.items()))
+    assert isinstance(data, list) and len(data) >= 1
 
     # request_id e meta presentes
     assert "request_id" in payload and isinstance(payload["request_id"], str)
     assert "meta" in payload and isinstance(payload["meta"].get("elapsed_ms"), int)
+    assert payload["meta"]["rows_total"] == len(data)
 
     # checa pelo menos um campo de data formatado (se existir no primeiro registro)
     sample = data[0]
@@ -62,12 +90,8 @@ def test_yaml_db_consistency_subset():
     assert info is not None, "view_fiis_info não encontrada no validate-schema"
 
     db_cols = set(info.get("db") or [])
-    # se o executor estiver indisponível, o endpoint pode marcar 'skipped'; neste caso, falha com mensagem clara
-    assert (
-        db_cols
-    ), f"sem colunas do DB para view_fiis_info: status={info.get('status')}"
+    assert db_cols, f"sem colunas do DB para view_fiis_info: status={info.get('status')}"
 
-    # todas as colunas do YAML devem existir no DB
     missing_in_db = [c for c in yaml_cols if c not in db_cols]
     assert not missing_in_db, f"colunas do YAML ausentes no DB: {missing_in_db}"
 
@@ -81,7 +105,6 @@ def test_prometheus_metrics_series_exist():
     r = client.get("/metrics")
     assert r.status_code == 200, r.text
     text = r.text
-    # Principais métricas expostas pelo app (nomenclatura 'mosaic_*' conforme módulo metrics)
     expected = [
         "mosaic_db_latency_ms",
         "mosaic_db_queries_total",
@@ -93,7 +116,6 @@ def test_prometheus_metrics_series_exist():
     for name in expected:
         assert name in text, f"métrica ausente em /metrics: {name}"
 
-    # série da entidade principal deve existir
     assert (
         'mosaic_db_rows_total{entity="view_fiis_info"}' in text
         or "view_fiis_info" in text

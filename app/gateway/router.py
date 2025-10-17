@@ -62,10 +62,33 @@ class RunViewRequest(BaseModel):
     limit: Optional[int] = Field(default=100)
 
 
+class ClientPayload(BaseModel):
+    client_id: Optional[str] = None
+    token: Optional[str] = None
+    nickname: Optional[str] = None
+    balance: Optional[float] = None
+
+
+class DateRangePayload(BaseModel):
+    start: Optional[str] = Field(default=None, alias="from")
+    end: Optional[str] = Field(default=None, alias="to")
+
+    model_config = {"populate_by_name": True}
+
+
+class TracePayload(BaseModel):
+    request_id: Optional[str] = None
+
+
 class AskRequest(BaseModel):
     question: str
-    top_k: int = 3  # nº máx. de intenções (entidades) a considerar
-    min_ratio: float = 0.6  # corte relativo ao melhor score (0–1)
+    top_k: Optional[int] = None
+    min_ratio: Optional[float] = None
+    date_range: Optional[DateRangePayload] = None
+    client: Optional[ClientPayload] = None
+    trace: Optional[TracePayload] = None
+
+    model_config = {"populate_by_name": True}
 
 
 # ========================= endpoints utilitários =========================
@@ -248,7 +271,8 @@ def run_view(req: RunViewRequest):
 def ask(req: AskRequest):
     t0 = time.time()
     try:
-        result = route_question(req.question)
+        payload = req.model_dump(exclude_none=True, by_alias=True)
+        result = route_question(payload)
         API_LATENCY_MS.labels(endpoint="/ask").set((time.time() - t0) * 1000.0)
         return result
     except HTTPException:
