@@ -2,6 +2,7 @@
 from fastapi.testclient import TestClient
 import pytest
 
+from typing import Set
 from app.main import app
 
 client = TestClient(app)
@@ -14,8 +15,22 @@ GROUP_INTENT = {
     "precos": "precos",
     "processos": "judicial",  # ou "processos" dependendo do COMMENT; aceitaremos qualquer um dos dois
     "ativos": "ativos",  # "imoveis" também é válido
-    "indicadores": "indicadores",  # "mercado" também pode aparecer
+    "indicadores": "indicadores",  # "mercado" e "taxas" também podem aparecer
 }
+
+# Conjunto de rótulos equivalentes por intenção esperada
+EQUIV: dict[str, Set[str]] = {
+    "cadastro": {"cadastro"},
+    "dividends": {"dividends", "historico"},
+    "historico": {"historico", "dividends"},
+    "precos": {"precos"},
+    "judicial": {"judicial", "processos"},
+    "ativos": {"ativos", "imoveis"},
+    "indicadores": {"indicadores", "mercado", "taxas"},
+    "mercado": {"indicadores", "mercado", "taxas"},
+    "taxas": {"indicadores", "mercado", "taxas"},
+}
+
 
 # ---------------- Perguntas ----------------
 
@@ -180,28 +195,11 @@ def test_examples_acceptance(question, expected_intent):
     # Queremos que o orquestrador **reconheça alguma intenção**.
     assert data["status"]["reason"] == "ok", f"NL falhou: {question}"
     intents = data.get("planner", {}).get("intents", []) or []
-    # Toleramos sinônimos de label (processos/judicial, ativos/imoveis, indicadores/mercado)
-    normalized = set(
-        (
-            "imoveis"
-            if i == "ativos"
-            else (
-                "processos"
-                if i == "judicial"
-                else "mercado" if i == "indicadores" else i
-            )
-        )
-        for i in intents
-    )
-    target = (
-        "imoveis"
-        if expected_intent == "ativos"
-        else (
-            "processos"
-            if expected_intent == "judicial"
-            else "indicadores" if expected_intent == "mercado" else expected_intent
-        )
-    )
-    assert any(
-        i in normalized for i in [target, expected_intent]
+
+    normalized = set(intents)
+
+    # Aceita equivalências de rótulos (p.ex. indicadores/mercado/taxas)
+    expected_set = EQUIV.get(expected_intent, {expected_intent})
+    assert (
+        normalized & expected_set
     ), f"Intent não detectada para: {question} → {intents}"

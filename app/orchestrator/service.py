@@ -91,6 +91,18 @@ def _tokenize(text: str) -> List[str]:
     return re.findall(r"[a-z0-9]{2,}", _unaccent_lower(text or ""))
 
 
+def _tokenize_list(values: List[str]) -> List[str]:
+    """
+    Expande uma lista de frases/palavras em um conjunto de tokens normalizados.
+    Ex.: ["valor de mercado", "p/vp"] -> ["valor","de","mercado","p","vp"]
+    (tokens com 1 char são ignorados pelo próprio _tokenize)
+    """
+    out: List[str] = []
+    for v in values:
+        out.extend(_tokenize(v))
+    return out
+
+
 def _meta(entity: str) -> Dict[str, Any]:
     return registry_service.get(entity) or {}
 
@@ -126,9 +138,11 @@ def _ask_meta(entity: str) -> Dict[str, Any]:
     meta: Dict[str, Any] = {}
     meta["intents"] = _ensure_list(raw.get("intents"))
 
+    # Keywords: manter originais e também versão tokenizada
     keywords = _ensure_list(raw.get("keywords"))
     meta["keywords"] = keywords
-    meta["keywords_normalized"] = [_unaccent_lower(k) for k in keywords]
+    kw_tokens = _tokenize_list(keywords)
+    meta["keywords_normalized"] = kw_tokens
 
     latest_words = _ensure_list(raw.get("latest_words"))
     meta["latest_words"] = latest_words
@@ -138,11 +152,14 @@ def _ask_meta(entity: str) -> Dict[str, Any]:
     raw_syn = raw.get("synonyms")
     if isinstance(raw_syn, dict):
         for key, value in raw_syn.items():
-            synonyms[key] = _ensure_list(value)
+            vals = _ensure_list(value)
+            # inclui tokens das frases para casar com perguntas reais
+            synonyms[key] = list(dict.fromkeys(_tokenize_list(vals) or vals))
     for key, value in raw.items():
         if key.startswith("synonyms."):
             intent = key.split(".", 1)[1]
-            synonyms[intent] = _ensure_list(value)
+            vals = _ensure_list(value)
+            synonyms[intent] = list(dict.fromkeys(_tokenize_list(vals) or vals))
     meta["synonyms"] = synonyms
     meta["synonyms_normalized"] = {
         key: [_unaccent_lower(v) for v in values] for key, values in synonyms.items()
@@ -176,9 +193,8 @@ def _score_entity(tokens: List[str], entity: str) -> Tuple[float, Optional[str]]
     ask_meta = _ask_meta(entity)
     weights = ask_meta.get("weights", {})
 
-    keyword_hits = sum(
-        1 for t in tokens if t in set(ask_meta.get("keywords_normalized", []))
-    )
+    kwset = set(ask_meta.get("keywords_normalized", []))
+    keyword_hits = sum(1 for t in tokens if t in kwset)
     score_keywords = keyword_hits * weights.get("keywords", 1.0)
 
     best_intent = None
