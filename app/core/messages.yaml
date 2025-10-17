@@ -1,6 +1,6 @@
 ask:
   status:
-    ok: "Tudo certo!"
+    ok: "Consulta realizada sem erros!"
   fallback:
     intent_unmatched: |
       Não encontramos uma intenção para a sua pergunta. Tente especificar o tipo de

@@ -246,7 +246,6 @@ ask:
   - info
   keywords:
   - cadastro
-  - dados
   - ficha
   - cnpj
   - site
@@ -255,7 +254,6 @@ ask:
   - gestor
   synonyms.cadastro:
   - cadastro
-  - dados
   - perfil
   - ficha
   - informações

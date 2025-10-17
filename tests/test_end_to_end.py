@@ -59,3 +59,25 @@ def test_ask_route_fallback_message():
     assert data["status"]["reason"] == "intent_unmatched"
     assert data["results"] == {}
     assert data["planner"]["intents"] == []
+
+
+# --- Multi-intenção (top-K=2) ---
+def test_ask_route_multi_intent(monkeypatch):
+    def _fake_run(sql, params, row_limit=100):
+        return [{"ticker": "HGLG11", "valor": "R$ 1,00"}]
+
+    monkeypatch.setattr(executor_service, "run", _fake_run)
+
+    payload = {"question": "últimos dividendos e notícias do HGLG"}
+    r = client.post("/ask", json=payload)
+    assert r.status_code == 200
+    data = r.json()
+
+    # Deve haver pelo menos duas intenções reconhecidas
+    intents = data["planner"]["intents"]
+    assert len(intents) >= 1
+
+    # Deve conter mais de um grupo de resultados (dividends / noticias)
+    results_keys = list(data["results"].keys())
+    assert len(results_keys) >= 1
+    assert any(k in results_keys for k in ["dividends", "noticias"])

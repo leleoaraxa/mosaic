@@ -1,3 +1,4 @@
+# app/core/settings.py
 """Configurações centrais do Sirios Mosaic."""
 
 from __future__ import annotations
@@ -15,6 +16,10 @@ class Settings(BaseSettings):
     database_url: str
     executor_mode: str = "read-only"
     db_schema: str = "public"
+
+    # Limiar mínimo de score e Multi-intenção (quantas entidades executar no máximo)
+    ask_top_k: int = 2  # máximo de intents executadas por pergunta
+    ask_min_score: float = 2.0  # já existe, usado como limiar de confiança
 
     # Observabilidade
     prometheus_url: str = "http://prometheus:9090"

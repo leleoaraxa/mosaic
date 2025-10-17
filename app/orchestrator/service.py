@@ -1,3 +1,4 @@
+# app/orchestrator/service.py
 """Orquestrador NL→SQL do Sirios Mosaic (versão v4 do envelope)."""
 
 from __future__ import annotations
@@ -80,7 +81,9 @@ def _unaccent_lower(value: str) -> str:
     if not isinstance(value, str):
         return ""
     return "".join(
-        c for c in unicodedata.normalize("NFD", value) if unicodedata.category(c) != "Mn"
+        c
+        for c in unicodedata.normalize("NFD", value)
+        if unicodedata.category(c) != "Mn"
     ).lower()
 
 
@@ -173,7 +176,9 @@ def _score_entity(tokens: List[str], entity: str) -> Tuple[float, Optional[str]]
     ask_meta = _ask_meta(entity)
     weights = ask_meta.get("weights", {})
 
-    keyword_hits = sum(1 for t in tokens if t in set(ask_meta.get("keywords_normalized", [])))
+    keyword_hits = sum(
+        1 for t in tokens if t in set(ask_meta.get("keywords_normalized", []))
+    )
     score_keywords = keyword_hits * weights.get("keywords", 1.0)
 
     best_intent = None
@@ -212,6 +217,27 @@ def _choose_entity_by_ask(question: str) -> Tuple[Optional[str], Optional[str], 
             best_intent = intent
             best_score = score
     return best_entity, best_intent, best_score
+
+
+# ---------------------------------------------------------------------------
+# 🔹 Multi-intenção (retorna top-K entidades com score relevante)
+# ---------------------------------------------------------------------------
+
+
+def _choose_entities_by_ask(question: str) -> List[Tuple[str, str, float]]:
+    tokens = _tokenize(question)
+    items = registry_service.list_all()
+    results: List[Tuple[str, str, float]] = []
+
+    for it in items:
+        entity = it["entity"]
+        score, intent = _score_entity(tokens, entity)
+        if score > 0:
+            results.append((entity, intent, score))
+
+    # ordena decrescente por score
+    results.sort(key=lambda x: x[2], reverse=True)
+    return results
 
 
 def _default_date_field(entity: str) -> Optional[str]:
@@ -255,13 +281,19 @@ def _relative_date_range(text_norm: str) -> Dict[str, str]:
     if m:
         months = int(m.group(1))
         start = today - relativedelta(months=months)
-        return {"date_from": start.strftime("%Y-%m-%d"), "date_to": today.strftime("%Y-%m-%d")}
+        return {
+            "date_from": start.strftime("%Y-%m-%d"),
+            "date_to": today.strftime("%Y-%m-%d"),
+        }
 
     m = re.search(r"(\d+)\s+mes(?:es)?\s+antes", text_norm)
     if m:
         months = int(m.group(1))
         start = today - relativedelta(months=months)
-        return {"date_from": start.strftime("%Y-%m-%d"), "date_to": today.strftime("%Y-%m-%d")}
+        return {
+            "date_from": start.strftime("%Y-%m-%d"),
+            "date_to": today.strftime("%Y-%m-%d"),
+        }
 
     if "mes anterior" in text_norm:
         first_this_month = today.replace(day=1)
@@ -275,7 +307,10 @@ def _relative_date_range(text_norm: str) -> Dict[str, str]:
     if "ano atual" in text_norm:
         start = date(today.year, 1, 1)
         end = date(today.year, 12, 31)
-        return {"date_from": start.strftime("%Y-%m-%d"), "date_to": end.strftime("%Y-%m-%d")}
+        return {
+            "date_from": start.strftime("%Y-%m-%d"),
+            "date_to": end.strftime("%Y-%m-%d"),
+        }
 
     return {}
 
@@ -304,10 +339,14 @@ def _extract_dates_range(text: str) -> Dict[str, str]:
     return _relative_date_range(_unaccent_lower(text))
 
 
-def _resolve_date_range(question: str, explicit_range: Optional[Dict[str, Any]]) -> Dict[str, str]:
+def _resolve_date_range(
+    question: str, explicit_range: Optional[Dict[str, Any]]
+) -> Dict[str, str]:
     resolved: Dict[str, str] = {}
     if explicit_range:
-        start = _parse_date_value(explicit_range.get("from") or explicit_range.get("start"))
+        start = _parse_date_value(
+            explicit_range.get("from") or explicit_range.get("start")
+        )
         end = _parse_date_value(explicit_range.get("to") or explicit_range.get("end"))
         if start:
             resolved["date_from"] = start
@@ -334,7 +373,9 @@ def _extract_tickers(text: str, valid: set[str]) -> List[str]:
     return found
 
 
-def _plan_question(question: str, entity: str, intent: Optional[str], payload: Dict[str, Any]) -> Dict[str, Any]:
+def _plan_question(
+    question: str, entity: str, intent: Optional[str], payload: Dict[str, Any]
+) -> Dict[str, Any]:
     valid_tickers = _load_valid_tickers()
     tickers = _extract_tickers(question, valid_tickers)
     filters: Dict[str, Any] = {}
@@ -372,9 +413,7 @@ def _plan_question(question: str, entity: str, intent: Optional[str], payload: D
     planner = {
         "intents": [intent] if intent else [],
         "entities": (
-            [{"intent": intent, "entity": entity}]
-            if intent
-            else [{"entity": entity}]
+            [{"intent": intent, "entity": entity}] if intent else [{"entity": entity}]
         ),
         "filters": planner_filters,
     }
@@ -423,9 +462,13 @@ def _client_echo(raw: Optional[Dict[str, Any]]) -> Dict[str, Any]:
 # ---------------------------------------------------------------------------
 
 
-def build_run_request(question: str, overrides: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+def build_run_request(
+    question: str, overrides: Optional[Dict[str, Any]] = None
+) -> Dict[str, Any]:
     entity, intent, score = _choose_entity_by_ask(question)
-    if not entity or score <= 0:
+    # if not entity or score <= 0:
+    # Leleo perguntar
+    if not entity or score < settings.ask_min_score:
         raise ValueError("Nenhuma entidade encontrada para a pergunta informada.")
     plan = _plan_question(question, entity, intent, overrides or {})
     return plan["run_request"]
@@ -436,8 +479,15 @@ def route_question(payload: Dict[str, Any]) -> Dict[str, Any]:
     question = (payload or {}).get("question") or ""
     req_id = str(uuid.uuid4())
 
-    entity, intent, score = _choose_entity_by_ask(question)
-    if not entity or score <= 0:
+    # --- Escolha múltipla (top-K) ---
+    ranked = _choose_entities_by_ask(question)
+    selected = [
+        (entity, intent, score)
+        for entity, intent, score in ranked
+        if score >= settings.ask_min_score
+    ][: settings.ask_top_k]
+
+    if not selected:
         elapsed_ms = int((time.time() - t0) * 1000)
         response = {
             "request_id": req_id,
@@ -446,7 +496,10 @@ def route_question(payload: Dict[str, Any]) -> Dict[str, Any]:
             "status": {
                 "reason": "intent_unmatched",
                 "message": settings.get_message(
-                    "ask", "fallback", "intent_unmatched", default="Intenção não reconhecida."
+                    "ask",
+                    "fallback",
+                    "intent_unmatched",
+                    default="Intenção não reconhecida.",
                 ),
             },
             "planner": {"intents": [], "entities": [], "filters": {}},
@@ -479,26 +532,33 @@ def route_question(payload: Dict[str, Any]) -> Dict[str, Any]:
         ASK_ROWS.labels(entity="__all__").inc(0)
         return response
 
-    plan = _plan_question(question, entity, intent, payload)
-    run_request = plan["run_request"]
+    results: Dict[str, Any] = {}
+    planner_entities: List[Dict[str, Any]] = []
+    rows_by_intent: Dict[str, int] = {}
 
-    normalized: ExtractedRunRequest = normalize_request(run_request)
-    sql, params = builder_service.build_sql(normalized)
+    for entity, intent, score in selected:
+        plan = _plan_question(question, entity, intent, payload)
+        run_request = plan["run_request"]
 
-    entity_label = normalized.entity
-    tdb0 = time.time()
-    rows = executor_service.run(sql, params, row_limit=normalized.limit)
-    elapsed_db_ms = (time.time() - tdb0) * 1000.0
+        normalized: ExtractedRunRequest = normalize_request(run_request)
+        sql, params = builder_service.build_sql(normalized)
 
-    DB_LATENCY_MS.labels(entity=entity_label).observe(elapsed_db_ms)
-    DB_QUERIES.labels(entity=entity_label).inc()
-    DB_ROWS.labels(entity=entity_label).inc(len(rows))
+        entity_label = normalized.entity
+        tdb0 = time.time()
+        rows = executor_service.run(sql, params, row_limit=normalized.limit)
+        elapsed_db_ms = (time.time() - tdb0) * 1000.0
+
+        DB_LATENCY_MS.labels(entity=entity_label).observe(elapsed_db_ms)
+        DB_QUERIES.labels(entity=entity_label).inc()
+        DB_ROWS.labels(entity=entity_label).inc(len(rows))
+
+        data = to_human(rows)
+        key = intent or entity_label
+        results[key] = data
+        planner_entities.append({"intent": intent, "entity": entity_label})
+        rows_by_intent[key] = len(rows)
 
     elapsed_total = (time.time() - t0) * 1000.0
-    data = to_human(rows)
-
-    results_key = intent or entity_label
-    results = {results_key: data}
 
     response = {
         "request_id": req_id,
@@ -508,13 +568,17 @@ def route_question(payload: Dict[str, Any]) -> Dict[str, Any]:
             "reason": "ok",
             "message": settings.get_message("ask", "status", "ok", default="ok"),
         },
-        "planner": plan["planner"],
+        "planner": {
+            "intents": [intent for _, intent, _ in selected if intent],
+            "entities": planner_entities,
+            "filters": {},
+        },
         "results": results,
         "meta": {
             "elapsed_ms": int(elapsed_total),
-            "rows_total": len(rows),
-            "rows_by_intent": {results_key: len(rows)} if intent else {entity_label: len(rows)},
-            "limits": {"top_k": payload.get("top_k") or _ask_meta(entity_label).get("top_k", 1)},
+            "rows_total": sum(rows_by_intent.values()),
+            "rows_by_intent": rows_by_intent,
+            "limits": {"top_k": settings.ask_top_k},
         },
         "usage": {
             "tokens_prompt": 0,
@@ -527,10 +591,10 @@ def route_question(payload: Dict[str, Any]) -> Dict[str, Any]:
         "ASK_ROUTE",
         extra={
             "request_id": req_id,
-            "entity": entity_label,
-            "intent": intent,
+            "entities": [e for e, _, _ in selected],
+            "intents": [i for _, i, _ in selected],
             "question": question,
-            "rows": len(rows),
+            "rows_total": sum(rows_by_intent.values()),
             "elapsed_ms": int(elapsed_total),
         },
     )
