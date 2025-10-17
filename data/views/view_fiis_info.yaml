@@ -242,22 +242,75 @@ columns:
 ask:
   intents:
   - cadastro
-  - perfil
-  - info
   keywords:
   - cadastro
   - ficha
+  - perfil
   - cnpj
   - site
   - administrador
   - custodiante
   - gestor
-  synonyms.cadastro:
-  - cadastro
-  - perfil
-  - ficha
-  - informações
-  weights.keywords:
-  - '1'
-  weights.synonyms:
-  - '2'
+  - tipo
+  - segmento
+  - classificação
+  - publico-alvo
+  - ipo
+  - isin
+  - b3
+  synonyms:
+    cadastro:
+    - cadastro
+    - perfil
+    - ficha
+    - informações
+    - cnpj
+    - administrador
+    - gestor
+    - custodiante
+    - site
+    - tipo
+    - segmento
+    - classificação
+    - público-alvo
+    - ipo
+    - isin
+    - nome b3
+    - valor de mercado
+    - p/vp
+    - market cap
+    - sharpe
+    - volatilidade
+    - dividend payout
+    - cap rate
+    - ev
+    - eps
+    - rps
+    - equity per share
+    - revenue per share
+  latest_words:
+  - último
+  - últimos
+  - mais recente
+  - recente
+  - atual
+  timewords:
+  - hoje
+  - ontem
+  - janeiro
+  - fevereiro
+  - março
+  - abril
+  - maio
+  - junho
+  - julho
+  - agosto
+  - setembro
+  - outubro
+  - novembro
+  - dezembro
+  weights:
+    keywords:
+    - '1'
+    synonyms:
+    - '2'

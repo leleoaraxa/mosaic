@@ -46,28 +46,49 @@ ask:
   - news
   keywords:
   - notícia
-  - noticias
+  - notícias
   - news
   - título
   - fonte
   - matéria
   - divulgação
   - publicação
-  synonyms.news:
-  - notícia
-  - noticias
   - manchete
-  - publicação
-  - divulgação
-  synonyms.latest:
-  - último
-  - últimos
-  - mais recente
+  synonyms:
+    noticias:
+    - notícia
+    - notícias
+    - news
+    - manchete
+    - publicação
+    - divulgação
+    - comunicado
+    - fato relevante
   latest_words:
   - último
   - últimos
   - mais recente
-  weights.keywords:
-  - '1'
-  weights.synonyms:
-  - '2'
+  - recente
+  - atual
+  timewords:
+  - hoje
+  - ontem
+  - semana
+  - mês
+  - janeiro
+  - fevereiro
+  - março
+  - abril
+  - maio
+  - junho
+  - julho
+  - agosto
+  - setembro
+  - outubro
+  - novembro
+  - dezembro
+  weights:
+    keywords:
+    - '1'
+    synonyms:
+    - '2'

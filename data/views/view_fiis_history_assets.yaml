@@ -56,13 +56,27 @@ ask:
   - asset
   - endereço
   - localização
-  synonyms.ativos:
-  - imóveis
-  - ativos
-  - bens
-  - propriedades
   - portfólio
-  weights.keywords:
-  - '1'
-  weights.synonyms:
-  - '2'
+  - propriedade
+  - shopping
+  - galpão
+  - cri
+  - papel
+  synonyms:
+    ativos:
+    - imóveis
+    - ativos
+    - bens
+    - propriedades
+    - portfólio
+    - empreendimentos
+    - galpões
+    - shoppings
+    - lojas
+    - crIs
+    - papéis
+  weights:
+    keywords:
+    - '1'
+    synonyms:
+    - '2'

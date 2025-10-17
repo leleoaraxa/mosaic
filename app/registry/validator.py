@@ -1,3 +1,4 @@
+# app/registry/validator.py
 """
 Validador dinâmico de YAMLs do catálogo Mosaic.
 
@@ -12,7 +13,7 @@ import hashlib
 import hmac
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, Field, ValidationError
+from pydantic import BaseModel, Field, ValidationError, ConfigDict
 
 from app.core.settings import settings
 
@@ -21,6 +22,8 @@ class AskBlock(BaseModel):
     intents: Optional[List[str]] = Field(default_factory=list)
     keywords: Optional[List[str]] = Field(default_factory=list)
     latest_words: Optional[List[str]] = Field(default_factory=list)
+    # ⚠️ Permite campos extras no bloco ask (ex.: synonyms.*, weights.*, top_k, routes.*, timewords, named_measures.*)
+    model_config = ConfigDict(extra="allow")
 
 
 class ViewSchema(BaseModel):
@@ -29,6 +32,8 @@ class ViewSchema(BaseModel):
     identifiers: List[str]
     ask: AskBlock
     signature: Optional[str] = None  # opcional: hash/assinatura
+    # ⚠️ Permite campos extras no nível da view (retrocompatível)
+    model_config = ConfigDict(extra="allow")
 
 
 def validate_yaml_structure(data: Dict[str, Any]) -> List[str]:

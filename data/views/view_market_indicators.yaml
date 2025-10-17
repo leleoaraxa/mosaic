@@ -39,12 +39,36 @@ ask:
   - indicadores
   - benchmark
   - referência
-  synonyms.indicadores:
-  - indicadores
-  - índices
-  - taxas
-  - benchmarks
-  weights.keywords:
-  - '1'
-  weights.synonyms:
-  - '2'
+  - ipca
+  - igpm
+  - incc
+  synonyms:
+    indicadores:
+    - indicadores
+    - índices
+    - taxas
+    - benchmarks
+    - ipca
+    - igpm
+    - incc
+    - inflação
+  latest_words:
+  - último
+  - mais recente
+  - atual
+  timewords:
+  - hoje
+  - ontem
+  - acumulado
+  - 12 meses
+  - ano
+  - '2024'
+  - '2025'
+  - janeiro
+  - '...'
+  - dezembro
+  weights:
+    keywords:
+    - '1'
+    synonyms:
+    - '2'

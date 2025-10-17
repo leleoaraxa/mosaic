@@ -64,23 +64,38 @@ ask:
   - taxas
   - diario
   keywords:
-  - ifix
-  - ifil
-  - ibov
   - cdi
   - selic
-  - dólar
-  - euro
-  - diário
   - poupança
   - juros
   - índices
-  synonyms.taxas:
-  - taxas
-  - juros
-  - índices
-  - indicadores
-  weights.keywords:
-  - '1'
-  weights.synonyms:
-  - '2'
+  - diário
+  - ipca
+  - igpm
+  - incc
+  synonyms:
+    taxas:
+    - taxas
+    - juros
+    - índices
+    - indicadores
+    - diário
+    - diaria
+  latest_words:
+  - último
+  - mais recente
+  - atual
+  timewords:
+  - hoje
+  - ontem
+  - acumulado
+  - no ano
+  - 12 meses
+  - janeiro
+  - '...'
+  - dezembro
+  weights:
+    keywords:
+    - '1'
+    synonyms:
+    - '2'

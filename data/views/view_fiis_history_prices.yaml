@@ -54,20 +54,52 @@ ask:
   - histórico
   - gráfico
   - cotação
-  synonyms.precos:
-  - preço
-  - cotação
-  - valor
-  - fechamento
-  synonyms.latest:
-  - último
-  - últimos
-  - mais recente
+  - cota
+  - média móvel
+  - tendência
+  synonyms:
+    precos:
+    - preço
+    - cotação
+    - valor
+    - fechamento
+    - cota
+    - última cotação
+    - atual
+    - ontem
+    - hoje
+    historico:
+    - histórico
+    - evolução de preços
+    - série temporal
+    - gráfico
   latest_words:
   - último
   - últimos
   - mais recente
-  weights.keywords:
-  - '1'
-  weights.synonyms:
-  - '2'
+  - recente
+  - atual
+  timewords:
+  - hoje
+  - ontem
+  - mes passado
+  - mês anterior
+  - ano atual
+  - 30 dias
+  - janeiro
+  - fevereiro
+  - março
+  - abril
+  - maio
+  - junho
+  - julho
+  - agosto
+  - setembro
+  - outubro
+  - novembro
+  - dezembro
+  weights:
+    keywords:
+    - '1'
+    synonyms:
+    - '2'

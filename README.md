@@ -126,3 +126,162 @@ Cada peça sabe o que é — e o que não é —, e o todo se adapta à medida q
 
 **Sirios Mosaic**
 © 2025 – Projeto de Pesquisa e Desenvolvimento **Sirios / Knowledge AI**
+
+
+## 🟦 **Intent: cadastro/financeiro FIIs**
+
+1. me mostra o cadastro do VINO11
+2. qual o CNPJ do HGLG11?
+3. quem é o administrador do KNRI11?
+4. o XPML11 é de gestão ativa ou passiva?
+5. qual o público-alvo do GGRC11?
+6. quando foi o IPO do HCTR11?
+7. o FII PVBI11 é listado em qual segmento?
+8. quem é o custodiante do CPTS11?
+9. qual o tipo de fundo do TRXF11?
+10. qual o website oficial do BTLG11?
+11. o VISC11 é um fundo exclusivo?
+12. me dá o código ISIN do HGRU11
+13. qual o setor e classificação do XPLG11?
+14. o VILG11 tem data de constituição de quando?
+15. qual o nome B3 do HFOF11?
+16. qual o valor de mercado do HGLG11?
+17. me mostra o P/VP do KNRI11
+18. qual o dividend payout do MXRF11?
+19. qual o cap rate do PVBI11?
+20. o XPLG11 tem alta volatilidade?
+21. mostra o Sharpe Ratio do HCTR11
+22. qual a taxa de crescimento do VISC11?
+23. qual o enterprise value do GGRC11?
+24. o HFOF11 tem bom retorno por cota?
+25. quanto é o equity per share do CPTS11?
+26. o TRXF11 tem alta relação preço/patrimônio?
+27. mostra o revenue per share do VILG11
+28. qual o índice de payout do BTLG11?
+29. o KNCR11 tem cap rate acima de 9%?
+30. me dá o market cap e o EV do XPML11
+
+---
+
+## 🟩 **Intent: dividendos**
+
+1. qual foi o último dividendo pago pelo HGLG11?
+2. quanto o KNRI11 pagou no último mês?
+3. qual o yield atual do CPTS11?
+4. o XPLG11 pagou dividendo em agosto?
+5. me mostra o dividendo mais recente do PVBI11
+6. quanto o HCTR11 distribuiu em setembro de 2025?
+7. qual o DY médio dos últimos 12 meses do VISC11?
+8. o MXRF11 pagou dividendo em dezembro passado?
+9. qual a data de pagamento mais recente do RECR11?
+10. quanto o VGIR11 pagou por cota em janeiro de 2025?
+11. me dá o último valor pago pelo HFOF11
+12. qual foi o yield do GGRC11 no mês passado?
+13. mostra o histórico resumido de dividendos do XPML11
+14. o KNCR11 distribuiu proventos em abril?
+15. quanto o BTLG11 pagou no último repasse?
+
+---
+
+## 🟨 **Intent: historico dividendos**
+
+1. mostra o histórico de dividendos do HGLG11
+2. quanto o KNRI11 pagou em cada mês de 2024?
+3. qual foi o total de dividendos do PVBI11 no último ano?
+4. lista os pagamentos do MXRF11 em 2023
+5. me dá o histórico anual de dividendos do CPTS11
+6. quanto o VISC11 distribuiu mês a mês?
+7. o HCTR11 pagou mais em 2023 ou 2024?
+8. qual o mês de maior pagamento do XPLG11?
+9. quanto o BTLG11 pagou em março de 2024?
+10. traz o histórico de dividendos do GGRC11
+11. o HFOF11 reduziu o pagamento recentemente?
+12. mostra a média mensal de dividendos do KNCR11
+13. qual o menor dividendo já pago pelo VILG11?
+14. quando o TRXF11 começou a pagar dividendos?
+15. histórico completo de dividendos do XPML11
+
+---
+
+## 🟧 **Intent: precos**
+
+1. qual o preço atual do HGLG11?
+2. quanto o KNRI11 fechou hoje?
+3. me mostra o preço do PVBI11 na última cotação
+4. o MXRF11 subiu nos últimos dias?
+5. qual a média móvel de 30 dias do HCTR11?
+6. mostra o preço do XPLG11 ontem
+7. o VISC11 está em tendência de alta?
+8. quanto o GGRC11 valeu em 1º de setembro de 2025?
+9. qual o preço médio do BTLG11 em agosto?
+10. o HFOF11 caiu este mês?
+11. mostra a evolução de preços do CPTS11
+12. quanto o TRXF11 estava valendo no começo do ano?
+13. o KNCR11 teve maior preço em qual dia?
+14. gráfico diário do VGIR11 (se disponível)
+15. qual o preço atual e a variação mensal do XPML11?
+
+
+---
+
+
+## 🟪 **Intent: processos**
+
+1. o HGLG11 tem algum processo ativo?
+2. quantas ações judiciais o KNRI11 possui?
+3. o MXRF11 está envolvido em algum processo?
+4. lista os processos em andamento do PVBI11
+5. o XPLG11 tem processo na CVM?
+6. mostra os processos administrativos do HCTR11
+7. o GGRC11 tem alguma causa trabalhista?
+8. há litígios envolvendo o CPTS11?
+9. o BTLG11 está sendo processado por algum motivo?
+10. me dá o resumo dos processos do VISC11
+11. o HFOF11 tem ações cíveis?
+12. o TRXF11 teve algum processo finalizado?
+13. quantos processos o KNCR11 possui atualmente?
+14. mostra o total de processos ativos do VGIR11
+15. há processos judiciais em nome do XPML11?
+
+---
+
+## 🟫 **Intent: ativos/imoveis**
+
+
+1. quais imóveis o HGLG11 possui?
+2. me mostra os ativos do KNRI11
+3. o PVBI11 tem imóveis em São Paulo?
+4. o XPLG11 tem galpões logísticos?
+5. onde ficam os ativos do GGRC11?
+6. o VISC11 possui shoppings?
+7. quais são os empreendimentos do HCTR11?
+8. o CPTS11 investe em CRIs ou imóveis físicos?
+9. me lista os imóveis do BTLG11
+10. o HFOF11 tem cotas de outros fundos?
+11. o TRXF11 é dono de qual ativo principal?
+12. o KNCR11 possui imóveis ou papéis?
+13. mostra o portfólio de ativos do VGIR11
+14. o XPML11 tem lojas ancoradas?
+15. onde ficam os ativos do VILG11?
+
+---
+
+## 🩵 **Intent: indicadores macro**
+
+1. qual foi o IPCA em março de 2025?
+2. quanto está a taxa Selic hoje?
+3. me mostra o CDI atual
+4. qual foi o IGPM acumulado no ano?
+5. o IPCA subiu em setembro?
+6. quanto está a inflação acumulada em 12 meses?
+7. mostra a variação do INCC em 2024
+8. qual o IPCA do último mês?
+9. o CDI anual está acima da Selic?
+10. qual o valor do IPCA em junho de 2025?
+11. quanto foi o IGPM de janeiro de 2024?
+12. o IPCA fechou em alta ou baixa?
+13. mostra o histórico mensal do IPCA em 2025
+14. quanto rendeu o CDI em 2024?
+15. qual é a projeção da Selic para este mês?
+
+---

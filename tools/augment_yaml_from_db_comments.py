@@ -93,14 +93,33 @@ def parse_view_comment(
     Separa a descrição da view e o bloco 'ask' do COMMENT de view.
     Formato esperado:
         "<descricao humana> ||ask:key1=v1,v2; key2=x,y"
-    Retorna (descricao, {"key1":[v1,v2], "key2":[x,y]})
+    Retorna (descricao, {...}) com suporte a chaves aninhadas tipo "synonyms.dividends".
     """
     if not raw:
         return None, {}
     parts = raw.split("||ask:", 1)
     desc = parts[0].strip() if parts[0] else None
 
-    ask: Dict[str, List[str]] = {}
+    def _assign_nested(d: Dict[str, Any], path: List[str], values: List[str]):
+        """
+        Atribui em d[path[0]]...[path[-1]] = values (criando dicts no caminho).
+        Mantém listas no nível folha.
+        """
+        cur = d
+        for i, key in enumerate(path):
+            is_last = i == len(path) - 1
+            if is_last:
+                # se já existir algo, sobrescreve de forma idempotente
+                cur[key] = values
+            else:
+                nxt = cur.get(key)
+                if not isinstance(nxt, dict):
+                    nxt = {}
+                    cur[key] = nxt
+                cur = nxt
+
+    ask: Dict[str, Any] = {}
+
     if len(parts) > 1:
         tail = parts[1].strip()
         for part in tail.split(";"):
@@ -110,8 +129,18 @@ def parse_view_comment(
             k, v = part.split("=", 1)
             key = k.strip()
             vals = [x.strip() for x in v.split(",") if x.strip()]
-            if key and vals:
+            if not key or not vals:
+                continue
+
+            # Suporta "a.b.c" -> ask["a"]["b"]["c"] = vals
+            if "." in key:
+                path = [p.strip() for p in key.split(".") if p.strip()]
+                if path:
+                    _assign_nested(ask, path, vals)
+            else:
+                # nível plano
                 ask[key] = vals
+
     return (desc if desc else None), ask
 
 
@@ -158,13 +187,21 @@ def apply_view_comment(
 
     # ask (view-level)
     if ask:
+        # mescla preservando chaves existentes (deep merge raso para dicts simples)
+        def _deep_merge(dst: Dict[str, Any], src: Dict[str, Any]):
+            for k, v in src.items():
+                if isinstance(v, dict) and isinstance(dst.get(k), dict):
+                    _deep_merge(dst[k], v)
+                else:
+                    dst[k] = v
+
         before = (
             yaml.safe_dump(doc.get("ask", {}), allow_unicode=True, sort_keys=True)
             if doc.get("ask")
             else ""
         )
         new = dict(doc.get("ask", {}))
-        new.update(ask)
+        _deep_merge(new, ask)
         after = yaml.safe_dump(new, allow_unicode=True, sort_keys=True)
         if before != after:
             doc["ask"] = new

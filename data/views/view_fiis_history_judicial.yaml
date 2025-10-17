@@ -58,13 +58,23 @@ ask:
   - riscos
   - litígio
   - decisão
-  synonyms.judicial:
-  - processo
-  - ação
-  - litígio
-  - demanda
-  - causa
-  weights.keywords:
-  - '1'
-  weights.synonyms:
-  - '2'
+  - cível
+  - trabalhista
+  - administrativo
+  - cvm
+  synonyms:
+    judicial:
+    - processo
+    - ação
+    - litígio
+    - demanda
+    - causa
+    - processos administrativos
+    - cvm
+    - trabalhista
+    - cível
+  weights:
+    keywords:
+    - '1'
+    synonyms:
+    - '2'

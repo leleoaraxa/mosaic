@@ -34,29 +34,62 @@ ask:
   - dividends
   - historico
   keywords:
-  - dividendos
   - dividendo
+  - dividendos
   - rendimentos
   - rendimento
-  - proventos
   - provento
+  - proventos
   - histórico
   - último
   - mais recente
-  synonyms.dividends:
-  - dividendos
-  - rendimentos
-  - proventos
-  - pagamentos
-  synonyms.latest:
-  - último
-  - últimos
-  - mais recente
+  - yield
+  - dy
+  - repasse
+  synonyms:
+    dividends:
+    - dividendo
+    - dividendos
+    - rendimentos
+    - proventos
+    - pagamentos
+    - repasse
+    - yield
+    - dy
+    historico:
+    - histórico
+    - histórico de dividendos
+    - mês a mês
+    - anual
+    - total
+    - linha do tempo
   latest_words:
   - último
   - últimos
   - mais recente
-  weights.keywords:
-  - '1'
-  weights.synonyms:
-  - '2'
+  - recente
+  - atual
+  timewords:
+  - hoje
+  - ontem
+  - mes passado
+  - mês anterior
+  - ano atual
+  - 12 meses
+  - janeiro
+  - fevereiro
+  - março
+  - abril
+  - maio
+  - junho
+  - julho
+  - agosto
+  - setembro
+  - outubro
+  - novembro
+  - dezembro
+  weights:
+    keywords:
+    - '1'
+    synonyms:
+    - '2'
