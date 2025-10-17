@@ -20,16 +20,17 @@ Uso:
     # Somente mismatches, em JSON
     python tools/diff_yaml_db.py --only-mismatch --json
 """
+import argparse
+import json
 import os
 import sys
-import json
-import argparse
-from typing import Dict, Any, List
+from typing import Any, Dict, List
+
+from app.executor.service import executor_service
 
 # Importa serviços do app
 # Precisa que o projeto esteja no PYTHONPATH (rodar da raiz do projeto).
 from app.registry.service import registry_service
-from app.executor.service import executor_service
 
 
 def yaml_colnames(entity: str) -> List[str]:

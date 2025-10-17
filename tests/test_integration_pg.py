@@ -1,6 +1,8 @@
 # tests/test_integration_pg.py
 import re
+
 from fastapi.testclient import TestClient
+
 from app.main import app
 from app.registry.service import registry_service
 

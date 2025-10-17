@@ -1,5 +1,8 @@
 # tools/snapshot_views_from_db.py
-import os, yaml
+import os
+
+import yaml
+
 from app.executor.service import executor_service
 
 VIEWS = {

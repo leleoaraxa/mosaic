@@ -1,8 +1,10 @@
 # app/extractors/normalizers.py
-from pydantic import BaseModel, Field
-from typing import Optional, Dict, Any, List
-from datetime import datetime
 import re
+from datetime import datetime
+from typing import Any, Dict, List, Optional
+
+from pydantic import BaseModel, Field
+
 from app.registry.service import registry_service
 
 

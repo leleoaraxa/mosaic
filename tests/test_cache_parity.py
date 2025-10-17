@@ -3,7 +3,11 @@ import os
 os.environ.setdefault("DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/postgres")
 
 from app.core.settings import settings
-from app.infrastructure.cache import LocalCacheBackend, NamespacedCache, get_cache_backend
+from app.infrastructure.cache import (
+    LocalCacheBackend,
+    NamespacedCache,
+    get_cache_backend,
+)
 from app.registry import preloader
 
 

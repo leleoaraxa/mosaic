@@ -1,10 +1,10 @@
 # app/observability/logging.py
-import os
-import logging
-import uuid
 import contextvars
-from typing import Optional
+import logging
+import os
+import uuid
 from logging.handlers import RotatingFileHandler
+from typing import Optional
 
 from pythonjsonlogger import jsonlogger
 from starlette.middleware.base import BaseHTTPMiddleware

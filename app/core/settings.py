@@ -4,8 +4,9 @@ Configurações centrais do Sirios Mosaic.
 Usa pydantic-settings para permitir overrides via .env ou variáveis do Docker.
 """
 
-from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing import Optional
+
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):

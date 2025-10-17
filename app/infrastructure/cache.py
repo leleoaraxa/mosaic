@@ -9,9 +9,10 @@ Ambos seguem a interface CacheBackend (get/set/delete).
 """
 
 from __future__ import annotations
+
+import time
 from abc import ABC, abstractmethod
 from typing import Optional
-import time, json
 
 from app.core.settings import settings
 

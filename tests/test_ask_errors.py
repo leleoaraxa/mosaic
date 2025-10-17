@@ -1,5 +1,6 @@
 # tests/test_ask_errors.py
 from fastapi.testclient import TestClient
+
 from app.main import app
 
 client = TestClient(app)

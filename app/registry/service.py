@@ -1,7 +1,6 @@
 # app/registry/service.py
-import os
-from typing import Dict, Any, List, Optional
-from app.registry.loader import load_views
+from typing import Any, Dict, List, Optional
+
 from app.registry.preloader import preload_views
 
 

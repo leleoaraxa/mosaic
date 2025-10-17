@@ -8,8 +8,12 @@ Objetivos:
 """
 
 from __future__ import annotations
-import json, hashlib, os
-from typing import Dict, Any
+
+import hashlib
+import json
+import os
+from typing import Any, Dict
+
 from app.core.settings import settings
 from app.infrastructure.cache import get_cache_backend
 from app.registry.loader import load_views  # já existe
