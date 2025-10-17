@@ -95,6 +95,16 @@ Content-Type: application/json
   "question": "qual o CNPJ do KNRI"
 }
 
+### investigar
+###
+POST http://localhost:8000/ask
+Content-Type: application/json
+
+{
+  "question": "últimos dividendos e notícias do HGLG e KNRI",
+  "top_k": 3
+}
+
 ###
 POST http://localhost:8000/ask
 Content-Type: application/json
@@ -112,12 +122,3 @@ Content-Type: application/json
   "question": "últimos dividendos do HGLG e KNRI e notícias do HGLG"
 }
 
-
-###
-POST http://localhost:8000/ask
-Content-Type: application/json
-
-{
-  "question": "últimos dividendos e notícias do HGLG e KNRI",
-  "top_k": 3
-}
