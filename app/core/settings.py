@@ -18,8 +18,8 @@ class Settings(BaseSettings):
     db_schema: str = "public"
 
     # Limiar mínimo de score e Multi-intenção (quantas entidades executar no máximo)
-    ask_top_k: int = 2  # máximo de intents executadas por pergunta
-    ask_min_score: float = 2.0  # já existe, usado como limiar de confiança
+    ask_top_k: int = 2
+    ask_min_score: float = 1.0
 
     # Observabilidade
     prometheus_url: str = "http://prometheus:9090"

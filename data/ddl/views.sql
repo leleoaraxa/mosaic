@@ -223,7 +223,7 @@ CREATE INDEX IF NOT EXISTS idx_fiis_info_classification_unaccent ON view_fiis_in
 CREATE INDEX IF NOT EXISTS idx_fiis_info_management_type_unaccent ON view_fiis_info (public.unaccent_ci(management_type));
 CREATE INDEX IF NOT EXISTS idx_fiis_info_target_market_unaccent ON view_fiis_info (public.unaccent_ci(target_market));
 
-COMMENT ON MATERIALIZED VIEW view_fiis_info IS 'Informações cadastrais completas de cada Fundo Imobiliário listado na B3 (1 linha por fundo).||ask:intents=cadastro,perfil,info;keywords=cadastro,dados,ficha,cnpj,site,administrador,custodiante,gestor;synonyms.cadastro=cadastro,dados,perfil,ficha,informações;weights.keywords=1;weights.synonyms=2;';
+COMMENT ON MATERIALIZED VIEW view_fiis_info IS 'Informações cadastrais completas de cada Fundo Imobiliário listado na B3 (1 linha por fundo).||ask:intents=cadastro,perfil,info;keywords=cadastro,ficha,cnpj,site,administrador,custodiante,gestor;synonyms.cadastro=cadastro,perfil,ficha,informações;weights.keywords=1;weights.synonyms=2;';
 COMMENT ON COLUMN view_fiis_info.ticker IS 'Código do fundo na B3.|Código FII';
 COMMENT ON COLUMN view_fiis_info.fii_cnpj IS 'CNPJ do FII (identificador único).|CNPJ';
 COMMENT ON COLUMN view_fiis_info.ticker_full_name IS 'Nome completo do ticker.|Nome completo';

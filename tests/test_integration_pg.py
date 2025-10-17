@@ -1,3 +1,4 @@
+# tests/test_integration_pg.py
 import re
 from datetime import date
 
@@ -90,7 +91,9 @@ def test_yaml_db_consistency_subset():
     assert info is not None, "view_fiis_info não encontrada no validate-schema"
 
     db_cols = set(info.get("db") or [])
-    assert db_cols, f"sem colunas do DB para view_fiis_info: status={info.get('status')}"
+    assert (
+        db_cols
+    ), f"sem colunas do DB para view_fiis_info: status={info.get('status')}"
 
     missing_in_db = [c for c in yaml_cols if c not in db_cols]
     assert not missing_in_db, f"colunas do YAML ausentes no DB: {missing_in_db}"
