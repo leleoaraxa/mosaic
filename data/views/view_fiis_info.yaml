@@ -314,3 +314,55 @@ ask:
     - '1'
     synonyms:
     - '2'
+  intent_tokens:
+    cadastro:
+    - cnpj
+    - administrador
+    - custodiante
+    - gestão
+    - público
+    - alvo
+    - ipo
+    - isin
+    - segmento
+    - website
+    - exclusivo
+    - patrimônio
+    - pvp
+    - payout
+    - enterprise
+    - value
+    - equity
+    - crescimento
+    ativos:
+    - imóvel
+    - imóveis
+    - portfólio
+    - galpão
+    - shopping
+    - ativo
+    - ativos
+    - carteira
+    precos:
+    - preço
+    - preços
+    - cotação
+    - valor
+    - variação
+    dividends:
+    - dividendo
+    - provento
+    - yield
+    - dy
+    - rendimento
+    indicadores:
+    - ipca
+    - igpm
+    - incc
+    - selic
+    - cdi
+    judicial:
+    - processo
+    - processos
+    - judicial
+    - ação
