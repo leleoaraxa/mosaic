@@ -75,6 +75,12 @@ ask:
     - lojas
     - crIs
     - papéis
+    - cotas de fundos
+    - participações
+    imoveis:
+    - imóveis
+    - propriedades
+    - ativos físicos
   weights:
     keywords:
     - '1'
@@ -92,25 +98,14 @@ ask:
     - carteira
     - propriedade
     - empreendimento
-    precos:
-    - preço
-    - preços
-    - cotação
-    dividends:
-    - dividendo
-    - provento
-    - yield
-    - dy
-    cadastro:
-    - cnpj
-    - gestor
-    - administrador
-    judicial:
-    - processo
-    - judicial
-    indicadores:
-    - ipca
-    - igpm
-    - incc
-    - selic
-    - cdi
+    - cota
+    - cotas
+    - fundo
+    - fundos
+    - participação
+    - participacoes
+    imoveis:
+    - imóvel
+    - imóveis
+    - propriedade
+    - imobiliário

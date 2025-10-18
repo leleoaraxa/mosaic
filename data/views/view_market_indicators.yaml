@@ -86,20 +86,8 @@ ask:
     - incc
     - juros
     - taxa
-    precos:
-    - preço
-    - cotação
-    - valor
-    dividends:
-    - dividendo
-    - yield
-    - provento
-    cadastro:
-    - cnpj
-    - gestor
-    ativos:
-    - ativo
-    - ativos
-    judicial:
-    - processo
-    - judicial
+    - indicador
+    mercado:
+    - mercado
+    - taxas
+    - índices

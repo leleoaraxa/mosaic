@@ -56,6 +56,9 @@ ask:
     - repasse
     - yield
     - dy
+    - pagou
+    - pago
+    - pagos
     historico:
     - histórico
     - histórico de dividendos
@@ -104,25 +107,11 @@ ask:
     - rendimento
     - pagamento
     - pagamentos
-    precos:
-    - preço
-    - preços
-    - cotação
-    - valor
-    cadastro:
-    - cnpj
-    - administrador
-    - gestão
-    ativos:
-    - ativo
-    - ativos
-    - carteira
-    judicial:
-    - processo
-    - judicial
-    indicadores:
-    - ipca
-    - igpm
-    - incc
-    - selic
-    - cdi
+    - pagou
+    - pago
+    - pagos
+    historico:
+    - histórico
+    - históricos
+    - linha
+    - tempo

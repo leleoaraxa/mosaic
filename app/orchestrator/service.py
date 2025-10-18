@@ -461,7 +461,7 @@ def _score_entity(
             total -= 1.0
 
     # (2) "pago|pagamento" + "ultimo|recentemente" → dividends
-    if ({"pago", "pagamento", "pagamentos"} & tset) and (
+    if ({"pago", "pagou", "pagos", "pagamento", "pagamentos"} & tset) and (
         {"ultimo", "ultimos", "recentemente", "recente"} & tset
     ):
         if fam == "dividends":

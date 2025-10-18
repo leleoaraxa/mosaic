@@ -80,6 +80,9 @@ ask:
     - atual
     - ontem
     - hoje
+    - subiu
+    - caiu
+    - valendo
     historico:
     - histórico
     - evolução de preços
@@ -130,56 +133,8 @@ ask:
     - gráfico
     - variação
     - valor
-    dividends:
-    - dividendo
-    - dividendos
-    - provento
-    - proventos
-    - yield
-    - dy
-    - rendimento
-    - pagamento
-    - pagamentos
-    ativos:
-    - imóvel
-    - imóveis
-    - portfólio
-    - galpão
-    - shopping
-    - ativo
-    - ativos
-    - cota
-    - cotas
-    - carteira
-    - cri
-    - papel
-    judicial:
-    - processo
-    - processos
-    - judicial
-    - ação
-    - instância
-    indicadores:
-    - ipca
-    - igpm
-    - incc
-    - selic
-    - cdi
-    cadastro:
-    - cnpj
-    - administrador
-    - custodiante
-    - gestão
-    - público
-    - alvo
-    - ipo
-    - isin
-    - segmento
-    - website
-    - exclusivo
-    - patrimônio
-    - pvp
-    - payout
+    - valendo
     historico:
     - histórico
     - históricos
+    - evolução
