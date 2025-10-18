@@ -160,7 +160,12 @@ def plan_question(
 
     qnorm = ctx.normalized
     ask_meta = ASK_VOCAB.entity_meta(entity)
-    latest_words_norm = list(ask_meta.latest_words_normalized)
+
+    # 'último/recente' prioriza view; se não houver, cai para a ontologia global
+    latest_words_norm = list(ask_meta.latest_words_normalized) or list(
+        ASK_VOCAB.latest_words_defaults()
+    )
+
     order_by = None
     limit = settings.ask_default_limit
     if latest_words_norm and any(word in qnorm for word in latest_words_norm):

@@ -1,11 +1,22 @@
 from __future__ import annotations
 import time
+import yaml
+from pathlib import Path
 from collections import defaultdict
-from typing import Any, Dict, List, Set, FrozenSet
+from typing import Any, Dict, List, Set, FrozenSet, Tuple
 
 from app.registry.service import registry_service
 from .models import EntityAskMeta, SynonymSource
 from .utils import ensure_list, tokenize_list, unaccent_lower, parse_weight
+
+
+def _load_ontology() -> dict:
+    # ajuste o caminho conforme o seu projeto
+    path = Path("data/ask/ontology.yaml")
+    if path.exists():
+        with path.open("r", encoding="utf-8") as f:
+            return yaml.safe_load(f) or {}
+    return {}
 
 
 class AskVocabulary:
@@ -14,6 +25,9 @@ class AskVocabulary:
         self._expires_at = 0.0
         self._global_tokens: Dict[str, Set[str]] = {}
         self._entity_meta: Dict[str, EntityAskMeta] = {}
+        # Defaults vindos da ontologia global (fallback quando a view não define)
+        self._latest_words_defaults: Tuple[str, ...] = ()
+        self._timewords_defaults: Tuple[str, ...] = ()
 
     def invalidate(self) -> None:
         self._expires_at = 0.0
@@ -23,7 +37,16 @@ class AskVocabulary:
             self._reload()
 
     def _reload(self) -> None:
+        ontology = _load_ontology()
         global_tokens: Dict[str, Set[str]] = defaultdict(set)
+
+        # 1) sementes globais (ontologia)
+        ont_intent_tokens = ontology.get("intent_tokens", {}) or {}
+        for intent, words in ont_intent_tokens.items():
+            for w in ensure_list(words):
+                global_tokens[intent].add(unaccent_lower(w))
+
+        # 2) views do registry
         entity_meta: Dict[str, EntityAskMeta] = {}
         for entity, doc in registry_service.iter_documents():
             meta = self._build_entity_meta(doc or {})
@@ -31,9 +54,30 @@ class AskVocabulary:
             for intent, tokens in meta.intent_tokens.items():
                 if tokens:
                     global_tokens[intent].update(tokens)
+
+        # salvar defaults globais para fallback no planner
+        self._latest_words_defaults = tuple(
+            unaccent_lower(w)
+            for w in ensure_list(ontology.get("latest_words_defaults", []))
+        )
+        self._timewords_defaults = tuple(
+            unaccent_lower(w)
+            for w in ensure_list(ontology.get("timewords_defaults", []))
+        )
+
         self._global_tokens = {k: frozenset(v) for k, v in global_tokens.items()}
         self._entity_meta = entity_meta
         self._expires_at = time.time() + self._ttl_seconds
+
+    def latest_words_defaults(self) -> Tuple[str, ...]:
+        """Lista normalizada (lower+unaccent) de 'último/recente' globais da ontologia."""
+        self._ensure()
+        return self._latest_words_defaults
+
+    def timewords_defaults(self) -> Tuple[str, ...]:
+        """Lista normalizada (lower+unaccent) de palavras temporais globais da ontologia."""
+        self._ensure()
+        return self._timewords_defaults
 
     def _build_entity_meta(self, doc: Dict[str, Any]) -> EntityAskMeta:
         ask_block = doc.get("ask") or {}
