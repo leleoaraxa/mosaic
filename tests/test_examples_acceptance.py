@@ -1,24 +1,22 @@
-# tests/test_examples_acceptance.py
-from fastapi.testclient import TestClient
-import pytest
+from __future__ import annotations
 
 from typing import Set
+
+import pytest
+from fastapi.testclient import TestClient
+
 from app.main import app
 
-client = TestClient(app)
-
-# Mapeamento de grupos → intent esperada (conforme COMMENTS/YAML)
 GROUP_INTENT = {
     "cadastro": "cadastro",
     "dividendos": "dividends",
     "historico_dividendos": "historico",
     "precos": "precos",
-    "processos": "judicial",  # ou "processos" dependendo do COMMENT; aceitaremos qualquer um dos dois
-    "ativos": "ativos",  # "imoveis" também é válido
-    "indicadores": "indicadores",  # "mercado" e "taxas" também podem aparecer
+    "processos": "judicial",
+    "ativos": "ativos",
+    "indicadores": "indicadores",
 }
 
-# Conjunto de rótulos equivalentes por intenção esperada
 EQUIV: dict[str, Set[str]] = {
     "cadastro": {"cadastro"},
     "dividends": {"dividends", "historico"},
@@ -31,8 +29,6 @@ EQUIV: dict[str, Set[str]] = {
     "taxas": {"indicadores", "mercado", "taxas"},
 }
 
-
-# ---------------- Perguntas ----------------
 
 CADASTRO = [
     "me mostra o cadastro do VINO11",
@@ -67,6 +63,7 @@ CADASTRO = [
     "me dá o market cap e o EV do XPML11",
 ]
 
+
 DIVIDENDOS = [
     "qual foi o último dividendo pago pelo HGLG11?",
     "quanto o KNRI11 pagou no último mês?",
@@ -84,6 +81,7 @@ DIVIDENDOS = [
     "o KNCR11 distribuiu proventos em abril?",
     "quanto o BTLG11 pagou no último repasse?",
 ]
+
 
 HIST_DIV = [
     "mostra o histórico de dividendos do HGLG11",
@@ -103,6 +101,7 @@ HIST_DIV = [
     "histórico completo de dividendos do XPML11",
 ]
 
+
 PRECOS = [
     "qual o preço atual do HGLG11?",
     "quanto o KNRI11 fechou hoje?",
@@ -120,6 +119,7 @@ PRECOS = [
     "gráfico diário do VGIR11",
     "qual o preço atual e a variação mensal do XPML11?",
 ]
+
 
 PROCESSOS = [
     "o HGLG11 tem algum processo ativo?",
@@ -139,6 +139,7 @@ PROCESSOS = [
     "há processos judiciais em nome do XPML11?",
 ]
 
+
 ATIVOS = [
     "quais imóveis o HGLG11 possui?",
     "me mostra os ativos do KNRI11",
@@ -156,6 +157,7 @@ ATIVOS = [
     "o XPML11 tem lojas ancoradas?",
     "onde ficam os ativos do VILG11?",
 ]
+
 
 INDICADORES = [
     "qual foi o IPCA em março de 2025?",
@@ -175,6 +177,7 @@ INDICADORES = [
     "qual é a projeção da Selic para este mês?",
 ]
 
+
 ALL_CASES = (
     [(q, GROUP_INTENT["cadastro"]) for q in CADASTRO]
     + [(q, GROUP_INTENT["dividendos"]) for q in DIVIDENDOS]
@@ -186,19 +189,22 @@ ALL_CASES = (
 )
 
 
+@pytest.fixture
+def ask_client(stub_routing_dependencies):
+    return TestClient(app)
+
+
 @pytest.mark.parametrize("question,expected_intent", ALL_CASES)
-def test_examples_acceptance(question, expected_intent):
-    r = client.post("/ask", json={"question": question})
-    assert r.status_code == 200, r.text
-    data = r.json()
+def test_examples_acceptance(question, expected_intent, ask_client):
+    response = ask_client.post("/ask", json={"question": question})
+    assert response.status_code == 200, response.text
 
-    # Queremos que o orquestrador **reconheça alguma intenção**.
-    assert data["status"]["reason"] == "ok", f"NL falhou: {question}"
-    intents = data.get("planner", {}).get("intents", []) or []
+    payload = response.json()
+    assert payload["status"]["reason"] == "ok", f"NL falhou: {question}"
 
+    intents = payload.get("planner", {}).get("intents", []) or []
     normalized = set(intents)
 
-    # Aceita equivalências de rótulos (p.ex. indicadores/mercado/taxas)
     expected_set = EQUIV.get(expected_intent, {expected_intent})
     assert (
         normalized & expected_set
