@@ -75,8 +75,37 @@ ask:
     - lojas
     - crIs
     - papéis
+    - cotas de fundos
+    - participações
+    imoveis:
+    - imóveis
+    - propriedades
+    - ativos físicos
   weights:
     keywords:
     - '1'
     synonyms:
     - '2'
+  intent_tokens:
+    ativos:
+    - imóvel
+    - imóveis
+    - portfólio
+    - galpão
+    - shopping
+    - ativo
+    - ativos
+    - carteira
+    - propriedade
+    - empreendimento
+    - cota
+    - cotas
+    - fundo
+    - fundos
+    - participação
+    - participacoes
+    imoveis:
+    - imóvel
+    - imóveis
+    - propriedade
+    - imobiliário

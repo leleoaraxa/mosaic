@@ -19,6 +19,17 @@ columns:
 - name: close_price
   description: Preço de fechamento.
   alias: Fechamento
+  ask:
+    intents:
+    - precos
+    synonyms:
+      precos:
+      - fechou
+      - fechamento
+      - preço de fechamento
+      - close
+    weights:
+      synonyms: 2
 - name: adj_close_price
   description: Preço de fechamento ajustado.
   alias: Preço ajustado
@@ -57,6 +68,7 @@ ask:
   - cota
   - média móvel
   - tendência
+  - preço de fechamento
   synonyms:
     precos:
     - preço
@@ -68,6 +80,9 @@ ask:
     - atual
     - ontem
     - hoje
+    - subiu
+    - caiu
+    - valendo
     historico:
     - histórico
     - evolução de preços
@@ -79,6 +94,7 @@ ask:
   - mais recente
   - recente
   - atual
+  - hoje
   timewords:
   - hoje
   - ontem
@@ -103,3 +119,22 @@ ask:
     - '1'
     synonyms:
     - '2'
+  intent_tokens:
+    precos:
+    - preço
+    - preços
+    - cotação
+    - fechou
+    - subiu
+    - caiu
+    - tendência
+    - média
+    - móvel
+    - gráfico
+    - variação
+    - valor
+    - valendo
+    historico:
+    - histórico
+    - históricos
+    - evolução

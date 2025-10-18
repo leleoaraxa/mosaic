@@ -1,6 +1,8 @@
 # app/registry/service.py
 from typing import Any, Dict, List, Optional
 
+import copy
+
 from app.registry.preloader import preload_views
 
 
@@ -57,6 +59,16 @@ class RegistryService:
     def get_identifiers(self, entity: str) -> List[str]:
         meta = self._cache.get(entity) or {}
         return meta.get("identifiers", [])
+
+    def get_document(self, entity: str) -> Optional[Dict[str, Any]]:
+        meta = self._cache.get(entity)
+        if not meta:
+            return None
+        return copy.deepcopy(meta)
+
+    def iter_documents(self):
+        for name in sorted(self._cache.keys()):
+            yield name, copy.deepcopy(self._cache[name])
 
     def order_by_whitelist(self, entity: str) -> List[str]:
         meta = self.get(entity) or {}

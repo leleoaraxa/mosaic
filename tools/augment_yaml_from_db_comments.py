@@ -28,6 +28,8 @@ Flags:
 """
 
 import argparse
+import copy
+import json
 import os
 import sys
 from typing import Any, Dict, List, Optional, Tuple
@@ -88,7 +90,7 @@ def get_col_comments(conn, entity: str, schema: str) -> Dict[str, Optional[str]]
 
 def parse_view_comment(
     raw: Optional[str],
-) -> Tuple[Optional[str], Dict[str, List[str]]]:
+) -> Tuple[Optional[str], Dict[str, Any]]:
     """
     Separa a descrição da view e o bloco 'ask' do COMMENT de view.
     Formato esperado:
@@ -100,7 +102,7 @@ def parse_view_comment(
     parts = raw.split("||ask:", 1)
     desc = parts[0].strip() if parts[0] else None
 
-    def _assign_nested(d: Dict[str, Any], path: List[str], values: List[str]):
+    def _assign_nested(d: Dict[str, Any], path: List[str], value: Any):
         """
         Atribui em d[path[0]]...[path[-1]] = values (criando dicts no caminho).
         Mantém listas no nível folha.
@@ -110,7 +112,7 @@ def parse_view_comment(
             is_last = i == len(path) - 1
             if is_last:
                 # se já existir algo, sobrescreve de forma idempotente
-                cur[key] = values
+                cur[key] = value
             else:
                 nxt = cur.get(key)
                 if not isinstance(nxt, dict):
@@ -120,6 +122,20 @@ def parse_view_comment(
 
     ask: Dict[str, Any] = {}
 
+    def _parse_value(raw_value: str) -> Any:
+        value = raw_value.strip()
+        if not value:
+            return None
+        if (value.startswith("{") and value.endswith("}")) or (
+            value.startswith("[") and value.endswith("]")
+        ):
+            try:
+                return json.loads(value)
+            except json.JSONDecodeError:
+                return None
+        values = [x.strip() for x in value.split(",") if x.strip()]
+        return values
+
     if len(parts) > 1:
         tail = parts[1].strip()
         for part in tail.split(";"):
@@ -128,18 +144,18 @@ def parse_view_comment(
                 continue
             k, v = part.split("=", 1)
             key = k.strip()
-            vals = [x.strip() for x in v.split(",") if x.strip()]
-            if not key or not vals:
+            parsed = _parse_value(v)
+            if not key or parsed is None:
                 continue
 
             # Suporta "a.b.c" -> ask["a"]["b"]["c"] = vals
             if "." in key:
                 path = [p.strip() for p in key.split(".") if p.strip()]
                 if path:
-                    _assign_nested(ask, path, vals)
+                    _assign_nested(ask, path, parsed)
             else:
                 # nível plano
-                ask[key] = vals
+                ask[key] = parsed
 
     return (desc if desc else None), ask
 
@@ -234,9 +250,7 @@ def apply_col_comments(
         i = name_to_idx[name]
         cur = cols[i]
 
-        parts = [p.strip() for p in str(comment).split("|", 1)]
-        desc = parts[0] if parts else None
-        alias = parts[1] if len(parts) > 1 else None
+        desc, alias, col_meta = _split_col_comment(str(comment))
 
         if desc and (overwrite_cols or not cur.get("description")):
             if cur.get("description") != desc:
@@ -248,9 +262,68 @@ def apply_col_comments(
                 cur["alias"] = alias
                 changed = True
 
+        if col_meta is not None:
+            if _merge_column_ask(cur, col_meta, overwrite_cols):
+                changed = True
+
     if changed:
         doc["columns"] = cols
     return doc, changed
+
+
+def _split_col_comment(comment: str) -> Tuple[Optional[str], Optional[str], Optional[Dict[str, Any]]]:
+    meta: Optional[Dict[str, Any]] = None
+    base = comment
+    if "||col" in base:
+        base, raw_meta = base.split("||col", 1)
+        meta_str = raw_meta.lstrip(":=").strip()
+        if meta_str:
+            try:
+                meta = json.loads(meta_str)
+            except json.JSONDecodeError:
+                meta = None
+    parts = [p.strip() for p in base.split("|", 1)]
+    desc = parts[0] if parts else None
+    alias = parts[1] if len(parts) > 1 else None
+    return desc, alias, meta
+
+
+def _merge_column_ask(
+    column: Dict[str, Any], meta: Dict[str, Any], overwrite: bool
+) -> bool:
+    if not isinstance(meta, dict):
+        return False
+    existing = column.get("ask")
+    if not isinstance(existing, dict) or overwrite:
+        new_meta = copy.deepcopy(meta)
+        if existing != new_meta:
+            column["ask"] = new_meta
+            return True
+        return False
+    return _merge_dict_preserving(existing, meta, overwrite)
+
+
+def _merge_dict_preserving(
+    dst: Dict[str, Any], src: Dict[str, Any], overwrite: bool
+) -> bool:
+    changed = False
+    for key, value in src.items():
+        if isinstance(value, dict):
+            current = dst.get(key)
+            if isinstance(current, dict):
+                if _merge_dict_preserving(current, value, overwrite):
+                    changed = True
+            elif overwrite or key not in dst:
+                new_val = copy.deepcopy(value)
+                if dst.get(key) != new_val:
+                    dst[key] = new_val
+                    changed = True
+        else:
+            if overwrite or key not in dst:
+                if dst.get(key) != value:
+                    dst[key] = value
+                    changed = True
+    return changed
 
 
 # ----------------------- IO helpers -----------------------

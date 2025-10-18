@@ -56,6 +56,9 @@ ask:
     - repasse
     - yield
     - dy
+    - pagou
+    - pago
+    - pagos
     historico:
     - histórico
     - histórico de dividendos
@@ -93,3 +96,22 @@ ask:
     - '1'
     synonyms:
     - '2'
+  intent_tokens:
+    dividends:
+    - dividendo
+    - dividendos
+    - provento
+    - proventos
+    - yield
+    - dy
+    - rendimento
+    - pagamento
+    - pagamentos
+    - pagou
+    - pago
+    - pagos
+    historico:
+    - histórico
+    - históricos
+    - linha
+    - tempo
