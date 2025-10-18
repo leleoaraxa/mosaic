@@ -68,10 +68,8 @@ ask:
   - '...'
   - dezembro
   weights:
-    keywords:
-    - '1'
-    synonyms:
-    - '2'
+    keywords: 1.0
+    synonyms: 2.0
   intent_tokens:
     indicadores:
     - ifix

@@ -20,9 +20,39 @@ columns:
 - name: payment_date
   description: Data de pagamento do dividendo.
   alias: Data de pagamento
+  ask:
+    intents:
+    - dividends
+    synonyms:
+      dividends:
+      - data de pagamento
+      - pagamento
+      - payday
+    keywords: []
+    latest_words: []
+    timewords: []
+    weights:
+      keywords: 1.0
+      synonyms: 2.0
 - name: dividend_amt
   description: Valor do dividendo pago.
   alias: Valor do dividendo
+  ask:
+    intents:
+    - dividends
+    synonyms:
+      dividends:
+      - dividendo
+      - valor do dividendo
+      - rendimento
+      - provento
+      - DY
+    weights:
+      keywords: 1.0
+      synonyms: 2.5
+    keywords: []
+    latest_words: []
+    timewords: []
 - name: created_at
   description: Data de criação do registro.
   alias: Criado em
@@ -92,10 +122,8 @@ ask:
   - novembro
   - dezembro
   weights:
-    keywords:
-    - '1'
-    synonyms:
-    - '2'
+    keywords: 1.0
+    synonyms: 2.0
   intent_tokens:
     dividends:
     - dividendo

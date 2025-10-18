@@ -41,6 +41,12 @@ columns:
       - gestão passiva
       - ativa
       - passiva
+    keywords: []
+    latest_words: []
+    timewords: []
+    weights:
+      keywords: 1.0
+      synonyms: 2.0
 - name: target_market
   description: Público alvo.
   alias: Público alvo
@@ -54,6 +60,12 @@ columns:
       cadastro:
       - fundo exclusivo
       - exclusivo
+    keywords: []
+    latest_words: []
+    timewords: []
+    weights:
+      keywords: 1.0
+      synonyms: 2.0
 - name: isin
   description: Código ISIN do fundo.
   alias: Código ISIN
@@ -71,6 +83,12 @@ columns:
       - site oficial
       - website
       - site
+    keywords: []
+    latest_words: []
+    timewords: []
+    weights:
+      keywords: 1.0
+      synonyms: 2.0
 - name: admin_name
   description: Nome do administrador do fundo.
   alias: Administrador
@@ -111,6 +129,12 @@ columns:
       cadastro:
       - valor de mercado
       - market cap
+    keywords: []
+    latest_words: []
+    timewords: []
+    weights:
+      keywords: 1.0
+      synonyms: 2.0
 - name: enterprise_value
   description: Enterprise value (valor da firma).
   alias: Valor da firma
@@ -122,6 +146,12 @@ columns:
       - enterprise value
       - valor da firma
       - ev
+    keywords: []
+    latest_words: []
+    timewords: []
+    weights:
+      keywords: 1.0
+      synonyms: 2.0
 - name: price_book_ratio
   description: Índice Preço/Patrimônio.
   alias: P/VP
@@ -133,6 +163,12 @@ columns:
       - p/vp
       - preço sobre patrimônio
       - preço patrimônio
+    keywords: []
+    latest_words: []
+    timewords: []
+    weights:
+      keywords: 1.0
+      synonyms: 2.0
 - name: equity_per_share
   description: Patrimônio líquido por cota.
   alias: VPA
@@ -144,6 +180,12 @@ columns:
       - equity per share
       - patrimônio por cota
       - vpa
+    keywords: []
+    latest_words: []
+    timewords: []
+    weights:
+      keywords: 1.0
+      synonyms: 2.0
 - name: revenue_per_share
   description: Receita por cota.
   alias: Receita por cota
@@ -155,6 +197,12 @@ columns:
       - revenue per share
       - retorno por cota
       - receita por cota
+    keywords: []
+    latest_words: []
+    timewords: []
+    weights:
+      keywords: 1.0
+      synonyms: 2.0
 - name: dividend_payout_pct
   description: Payout ratio em percentual.
   alias: Dividend Payout
@@ -166,6 +214,12 @@ columns:
       - dividend payout
       - payout
       - índice de payout
+    keywords: []
+    latest_words: []
+    timewords: []
+    weights:
+      keywords: 1.0
+      synonyms: 2.0
 - name: growth_rate
   description: Taxa de crescimento percentual.
   alias: Crescimento do patrimônio
@@ -176,6 +230,12 @@ columns:
       cadastro:
       - taxa de crescimento
       - crescimento
+    keywords: []
+    latest_words: []
+    timewords: []
+    weights:
+      keywords: 1.0
+      synonyms: 2.0
 - name: cap_rate
   description: Cap rate percentual.
   alias: Taxa de capitalização
@@ -186,6 +246,12 @@ columns:
       cadastro:
       - cap rate
       - taxa de capitalização
+    keywords: []
+    latest_words: []
+    timewords: []
+    weights:
+      keywords: 1.0
+      synonyms: 2.0
 - name: volatility_ratio
   description: Volatilidade percentual.
   alias: Volatilidade
@@ -195,6 +261,12 @@ columns:
     synonyms:
       cadastro:
       - volatilidade
+    keywords: []
+    latest_words: []
+    timewords: []
+    weights:
+      keywords: 1.0
+      synonyms: 2.0
 - name: sharpe_ratio
   description: Índice de Sharpe.
   alias: Sharpe
@@ -206,6 +278,12 @@ columns:
       - sharpe
       - índice de sharpe
       - sharpe ratio
+    keywords: []
+    latest_words: []
+    timewords: []
+    weights:
+      keywords: 1.0
+      synonyms: 2.0
 - name: treynor_ratio
   description: Índice de Treynor.
   alias: Treynor
@@ -428,10 +506,8 @@ ask:
   - novembro
   - dezembro
   weights:
-    keywords:
-    - '1'
-    synonyms:
-    - '2'
+    keywords: 1.0
+    synonyms: 2.0
   intent_tokens:
     cadastro:
     - cnpj

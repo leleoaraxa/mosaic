@@ -1,0 +1,157 @@
+intent_tokens:
+  precos:
+  - preço
+  - preços
+  - cotação
+  - fechou
+  - fechamento
+  - close
+  - máxima
+  - mínima
+  - abertura
+  dividends:
+  - dividendo
+  - dividendos
+  - provento
+  - proventos
+  - yield
+  - dy
+  - rendimento
+  - pagamento
+  judicial:
+  - processo
+  - processos
+  - judicial
+  - judiciais
+  - ação
+  - ações
+  - instância
+  - litígio
+  - causa
+  ativos:
+  - imóvel
+  - imóveis
+  - portfólio
+  - ativo
+  - ativos
+  - galpão
+  - shopping
+  - participação
+  cadastro:
+  - cadastro
+  - perfil
+  - ficha
+  - cnpj
+  - administrador
+  - gestor
+  - custodiante
+  - site
+  - ipo
+  - isin
+  - administradora
+  - gestora
+  - nome b3
+  - nome_bovespa
+  - ticker
+  - tipo
+  - segmento
+  - classificação
+  - público-alvo
+  - mandato
+  - prazo de duração
+  - prazo
+  - regime tributário
+  - benchmark
+  - indexador
+  - taxa de administração
+  - taxa de gestão
+  - taxa de performance
+  - performance fee
+  - assembleia
+  - gestão
+  - administração
+  - cotistas
+  - número de cotistas
+  - liquidez
+  - volume negociado
+  - média diária
+  - free float
+  - patrimônio
+  - patrimônio líquido
+  - pl
+  - patrimônio por cota
+  - equity per share
+  - patrimônio/cota
+  - valor de mercado
+  - market cap
+  - marketcap
+  - capitalização de mercado
+  - enterprise value
+  - ev
+  - p/vp
+  - pvp
+  - price to book
+  - price-to-book
+  - p to bv
+  - cap rate
+  - caprate
+  - dividend payout
+  - payout
+  - payout ratio
+  - sharpe
+  - volatilidade
+  - beta
+  - eps
+  - lucro por cota
+  - lpa
+  - rps
+  - receita por cota
+  - revenue per share
+  - receita
+  - vacância
+  - ocupação
+  - taxa de ocupação
+  - emissões
+  - última emissão
+  - oferta
+  - oferta pública
+  - follow-on
+  indicadores:
+  - ipca
+  - igpm
+  - incc
+  - selic
+  - cdi
+  - inflação
+  - variação
+  - índice
+  - indicador
+weights_defaults:
+  keywords: 1.0
+  synonyms: 2.0
+latest_words_defaults:
+- último
+- últimos
+- mais recente
+- recente
+- atual
+- hoje
+timewords_defaults:
+- hoje
+- ontem
+- mês passado
+- mês anterior
+- ano
+- 12 meses
+- janeiro
+- fevereiro
+- março
+- abril
+- maio
+- junho
+- julho
+- agosto
+- setembro
+- outubro
+- novembro
+- dezembro

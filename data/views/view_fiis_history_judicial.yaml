@@ -8,6 +8,7 @@ order_by_whitelist:
 - created_at
 - updated_at
 - ticker
+- initiation_date
 columns:
 - name: ticker
   description: Ticker do FII.
@@ -18,15 +19,75 @@ columns:
 - name: judgment
   description: Local ou instância do julgamento.
   alias: Órgão julgador
+  ask:
+    intents:
+    - judicial
+    synonyms:
+      judicial:
+      - decisão
+      - sentença
+      - julgamento
+      - acórdão
+    keywords: []
+    latest_words: []
+    timewords: []
+    weights:
+      keywords: 1.0
+      synonyms: 2.0
 - name: instance
   description: 'Instância judicial (ex.: 1ª, 2ª).'
   alias: Instância
+  ask:
+    intents:
+    - judicial
+    synonyms:
+      judicial:
+      - instância
+      - 1ª instância
+      - segunda instância
+      - grau
+    keywords: []
+    latest_words: []
+    timewords: []
+    weights:
+      keywords: 1.0
+      synonyms: 2.0
 - name: initiation_date
   description: Data de abertura do processo.
   alias: Abertura
+  ask:
+    intents:
+    - judicial
+    synonyms:
+      judicial:
+      - início do processo
+      - protocolo
+      - data de início
+      - ajuizamento
+    keywords: []
+    latest_words: []
+    timewords: []
+    weights:
+      keywords: 1.0
+      synonyms: 2.0
 - name: cause_amt
   description: Valor da causa.
   alias: Montante em disputa
+  ask:
+    intents:
+    - judicial
+    synonyms:
+      judicial:
+      - valor da causa
+      - montante
+      - pedido
+      - quantum
+    keywords: []
+    latest_words: []
+    timewords: []
+    weights:
+      keywords: 1.0
+      synonyms: 2.0
 - name: process_parts
   description: Partes envolvidas no processo.
   alias: Partes
@@ -90,10 +151,8 @@ ask:
   - último
   - recente
   weights:
-    keywords:
-    - '1'
-    synonyms:
-    - '2'
+    keywords: 1.0
+    synonyms: 2.0
   intent_tokens:
     judicial:
     - processo
@@ -108,3 +167,4 @@ ask:
     - litígios
     - processado
     - processados
+  timewords: []

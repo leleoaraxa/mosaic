@@ -29,7 +29,11 @@ columns:
       - preço de fechamento
       - close
     weights:
-      synonyms: 2
+      keywords: 1.0
+      synonyms: 2.0
+    keywords: []
+    latest_words: []
+    timewords: []
 - name: adj_close_price
   description: Preço de fechamento ajustado.
   alias: Preço ajustado
@@ -115,10 +119,8 @@ ask:
   - novembro
   - dezembro
   weights:
-    keywords:
-    - '1'
-    synonyms:
-    - '2'
+    keywords: 1.0
+    synonyms: 2.0
   intent_tokens:
     precos:
     - preço

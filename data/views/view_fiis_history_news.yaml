@@ -5,10 +5,10 @@ identifiers:
 - news_url
 default_date_field: news_date
 order_by_whitelist:
-- news_date
 - created_at
-- updated_at
+- news_date
 - ticker
+- updated_at
 columns:
 - name: ticker
   description: Ticker do FII.
@@ -43,52 +43,43 @@ columns:
 ask:
   intents:
   - noticias
-  - news
+  - historico
   keywords:
   - notícia
   - notícias
-  - news
-  - título
-  - fonte
-  - matéria
+  - fato relevante
+  - comunicado
   - divulgação
-  - publicação
-  - manchete
+  - evento
+  - anúncio
   synonyms:
     noticias:
-    - notícia
-    - notícias
     - news
-    - manchete
-    - publicação
-    - divulgação
-    - comunicado
+    - notícias
     - fato relevante
+    - comunicado ao mercado
   latest_words:
   - último
-  - últimos
   - mais recente
-  - recente
   - atual
   timewords:
   - hoje
   - ontem
-  - semana
-  - mês
+  - mês passado
+  - ano
+  - '2024'
+  - '2025'
   - janeiro
-  - fevereiro
-  - março
-  - abril
-  - maio
-  - junho
-  - julho
-  - agosto
-  - setembro
-  - outubro
-  - novembro
+  - '...'
   - dezembro
   weights:
-    keywords:
-    - '1'
-    synonyms:
-    - '2'
+    keywords: 1.0
+    synonyms: 2.0
+  intent_tokens:
+    noticias:
+    - notícia
+    - notícias
+    - fato relevante
+    - comunicado
+    - divulgação
+    - evento

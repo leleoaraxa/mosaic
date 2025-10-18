@@ -8,10 +8,10 @@ identifiers:
 - assets_status
 default_date_field: created_at
 order_by_whitelist:
-- created_at
-- updated_at
-- ticker
 - asset_name
+- created_at
+- ticker
+- updated_at
 columns:
 - name: ticker
   description: Ticker do FII.
@@ -19,93 +19,214 @@ columns:
 - name: asset_name
   description: Nome do ativo (imóvel).
   alias: Nome do ativo
+  ask:
+    intents:
+    - ativos
+    synonyms:
+      ativos:
+      - ativo
+      - imóvel
+      - nome do ativo
+      - propriedade
+    keywords: []
+    latest_words: []
+    timewords: []
+    weights:
+      keywords: 1.0
+      synonyms: 2.0
 - name: asset_class
   description: Classe de ativo.
   alias: Classe
+  ask:
+    intents:
+    - ativos
+    synonyms:
+      ativos:
+      - classe do ativo
+      - segmento do ativo
+      - tipo de ativo
+    keywords: []
+    latest_words: []
+    timewords: []
+    weights:
+      keywords: 1.0
+      synonyms: 2.0
 - name: asset_address
   description: Endereço do ativo.
   alias: Endereço
+  ask:
+    intents:
+    - ativos
+    synonyms:
+      ativos:
+      - endereço
+      - localização
+      - localidade
+    keywords: []
+    latest_words: []
+    timewords: []
+    weights:
+      keywords: 1.0
+      synonyms: 2.0
 - name: total_area
   description: Área total do ativo em m².
   alias: Área total
+  ask:
+    intents:
+    - ativos
+    synonyms:
+      ativos:
+      - Área bruta locável
+      - ABL
+      - área locável
+      - área bruta
+    weights:
+      keywords: 1.0
+      synonyms: 2.0
+    keywords: []
+    latest_words: []
+    timewords: []
 - name: units_count
   description: Número de unidades do ativo.
   alias: Unidades
+  ask:
+    intents:
+    - ativos
+    synonyms:
+      ativos:
+      - unidades
+      - número de unidades
+      - qtd. de unidades
+    keywords: []
+    latest_words: []
+    timewords: []
+    weights:
+      keywords: 1.0
+      synonyms: 2.0
 - name: vacancy_ratio
   description: Taxa de vacância do ativo (%).
   alias: Vacância
+  ask:
+    intents:
+    - ativos
+    synonyms:
+      ativos:
+      - vacância
+      - taxa de vacância
+      - ocupação
+      - taxa de ocupação
+    weights:
+      keywords: 1.0
+      synonyms: 2.0
+    keywords: []
+    latest_words: []
+    timewords: []
 - name: non_compliant_ratio
   description: Taxa de inadimplência do ativo (%).
   alias: Inadimplência
+  ask:
+    intents:
+    - ativos
+    synonyms:
+      ativos:
+      - inadimplência
+      - taxa de inadimplência
+      - atraso
+    keywords: []
+    latest_words: []
+    timewords: []
+    weights:
+      keywords: 1.0
+      synonyms: 2.0
 - name: assets_status
+  ask:
+    intents:
+    - ativos
+    synonyms:
+      ativos:
+      - status do ativo
+      - situação do ativo
+      - condição
+    keywords: []
+    latest_words: []
+    timewords: []
+    weights:
+      keywords: 1.0
+      synonyms: 2.0
 - name: created_at
   description: Data de criação do registro.
   alias: Criado em
+  ask:
+    intents:
+    - ativos
+    synonyms:
+      ativos:
+      - criado em
+      - data de criação
+    keywords: []
+    latest_words: []
+    timewords: []
+    weights:
+      keywords: 1.0
+      synonyms: 2.0
 - name: updated_at
   description: Data da última atualização do registro.
   alias: Atualizado em
+  ask:
+    intents:
+    - ativos
+    synonyms:
+      ativos:
+      - atualizado em
+      - última atualização
+      - data de atualização
+    keywords: []
+    latest_words: []
+    timewords: []
+    weights:
+      keywords: 1.0
+      synonyms: 2.0
 ask:
   intents:
   - ativos
   - imoveis
   keywords:
   - imóvel
-  - imoveis
-  - ativo
-  - ativos
-  - asset
-  - endereço
-  - localização
-  - portfólio
-  - propriedade
-  - shopping
+  - imóveis
   - galpão
-  - cri
-  - papel
+  - shopping
+  - loja
+  - portfólio
+  - ativo
+  - participação
+  - ocupação
   synonyms:
     ativos:
-    - imóveis
-    - ativos
-    - bens
-    - propriedades
+    - portfolio
     - portfólio
-    - empreendimentos
-    - galpões
-    - shoppings
-    - lojas
-    - crIs
-    - papéis
-    - cotas de fundos
-    - participações
-    imoveis:
-    - imóveis
     - propriedades
-    - ativos físicos
+    - properties
+  latest_words:
+  - último
+  - mais recente
+  - atual
+  - hoje
+  timewords:
+  - hoje
+  - ontem
+  - mês passado
+  - mês anterior
+  - ano
   weights:
-    keywords:
-    - '1'
-    synonyms:
-    - '2'
+    keywords: 1.0
+    synonyms: 2.0
   intent_tokens:
     ativos:
     - imóvel
     - imóveis
     - portfólio
-    - galpão
-    - shopping
     - ativo
     - ativos
-    - carteira
-    - propriedade
-    - empreendimento
-    - cota
-    - cotas
-    - fundo
-    - fundos
+    - galpão
+    - shopping
     - participação
-    - participacoes
-    imoveis:
-    - imóvel
-    - imóveis
-    - propriedade
-    - imobiliário
