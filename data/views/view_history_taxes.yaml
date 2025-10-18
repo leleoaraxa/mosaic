@@ -99,3 +99,26 @@ ask:
     - '1'
     synonyms:
     - '2'
+  intent_tokens:
+    indicadores:
+    - cdi
+    - selic
+    - poupança
+    - juros
+    - índice
+    - ipca
+    - igpm
+    - incc
+    - taxa
+    precos:
+    - preço
+    - cotação
+    dividends:
+    - dividendo
+    - yield
+    cadastro:
+    - cnpj
+    ativos:
+    - ativo
+    judicial:
+    - processo

@@ -80,3 +80,37 @@ ask:
     - '1'
     synonyms:
     - '2'
+  intent_tokens:
+    ativos:
+    - imóvel
+    - imóveis
+    - portfólio
+    - galpão
+    - shopping
+    - ativo
+    - ativos
+    - carteira
+    - propriedade
+    - empreendimento
+    precos:
+    - preço
+    - preços
+    - cotação
+    dividends:
+    - dividendo
+    - provento
+    - yield
+    - dy
+    cadastro:
+    - cnpj
+    - gestor
+    - administrador
+    judicial:
+    - processo
+    - judicial
+    indicadores:
+    - ipca
+    - igpm
+    - incc
+    - selic
+    - cdi

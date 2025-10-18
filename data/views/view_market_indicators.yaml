@@ -72,3 +72,34 @@ ask:
     - '1'
     synonyms:
     - '2'
+  intent_tokens:
+    indicadores:
+    - ifix
+    - ifil
+    - ibov
+    - cdi
+    - selic
+    - dólar
+    - euro
+    - ipca
+    - igpm
+    - incc
+    - juros
+    - taxa
+    precos:
+    - preço
+    - cotação
+    - valor
+    dividends:
+    - dividendo
+    - yield
+    - provento
+    cadastro:
+    - cnpj
+    - gestor
+    ativos:
+    - ativo
+    - ativos
+    judicial:
+    - processo
+    - judicial

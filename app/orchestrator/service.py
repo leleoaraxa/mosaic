@@ -9,8 +9,9 @@ import re
 import time
 import unicodedata
 import uuid
+from collections import defaultdict
 from datetime import date, datetime, timedelta
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Set, Tuple
 
 from dateutil.relativedelta import relativedelta
 
@@ -35,152 +36,6 @@ logger = logging.getLogger("orchestrator")
 # cache simples dos tickers válidos (para não consultar toda hora)
 _CACHE = get_cache_backend()
 _TICKERS_KEY = "tickers:list:v1"  # será namespaced pelo NamespacedCache
-
-# ---------------------------------------------------------------------------
-# 🔹 Heurística global de intenção (tokens → label)
-# ---------------------------------------------------------------------------
-
-# Mapeia tokens típicos para um rótulo de intenção “global”.
-INTENT_TOKENS: Dict[str, List[str]] = {
-    "indicadores": [
-        "ipca",
-        "igpm",
-        "incc",
-        "selic",
-        "cdi",
-        "inflacao",
-        "projecao",
-        "infla",
-    ],
-    "judicial": [
-        "processo",
-        "processos",
-        "processado",
-        "processada",
-        "processados",
-        "processadas",
-        "processar",
-        "processa",
-        "judicial",
-        "judiciais",
-        "litigio",
-        "litigios",
-        "civel",
-        "civeis",
-        "trabalhista",
-        "cvm",
-        "administrativo",
-        "administrativos",
-        "acao",
-        "acoes",
-    ],
-    "ativos": [
-        # imóveis físicos
-        "imovel",
-        "imoveis",
-        "portfolio",
-        "galpao",
-        "galpoes",
-        "shopping",
-        "shoppings",
-        "loja",
-        "lojas",
-        "empreendimento",
-        "empreendimentos",
-        "ancorada",
-        "ancoradas",
-        # composição/posições (FIIs possuem cotas/papéis/CRIs etc.)
-        "ativo",
-        "ativos",
-        "cota",
-        "cotas",
-        "quota",
-        "quotas",
-        "fundo",
-        "fundos",
-        "carteira",
-        "participacao",
-        "participacoes",
-        "papeis",
-        "cri",
-        "cris",
-    ],
-    "precos": [
-        "preco",
-        "precos",
-        "cotacao",
-        "subiu",
-        "caiu",
-        "tendencia",
-        "media",
-        "movel",
-        "grafico",
-        "valeu",
-        "valendo",
-        "variacao",
-    ],
-    "cadastro": [
-        "cnpj",
-        "administrador",
-        "custodiante",
-        "gestao",
-        "ativa",
-        "passiva",
-        "publico",
-        "alvo",
-        "ipo",
-        "isin",
-        "segmento",
-        "website",
-        "site",
-        "exclusivo",
-        "pvp",
-        "vp",
-        "patrimonio",
-        "rate",
-        "payout",
-        "retorno",
-        "enterprise",
-        "value",
-        "ev",
-        "equity",
-        "growth",
-        "crescimento",
-        "constitui",
-        "constituicao",
-        "data",
-        "jensen",
-        "beta",
-        "treynor",
-        "tipo",
-        "setor",
-        "classificacao",
-        "b3",
-        "nome",
-        "valor",
-        "mercado",
-        "volatilidade",
-        "sharpe",
-        "revenue",
-    ],
-    "historico": ["historico", "historicos"],
-    "dividends": [
-        "dividendo",
-        "dividendos",
-        "pagou",
-        "pago",
-        "pagamento",
-        "pagamentos",
-        "distribuiu",
-        "repasse",
-        "dy",
-        "ultimo",
-        "yield",
-        "rendimento",
-        "proventos",
-    ],
-}
-
 
 # ---------------------------------------------------------------------------
 # 🔹 Cache e utilidades básicas
@@ -260,8 +115,8 @@ def _guess_intent(tokens: List[str]) -> Optional[str]:
         return None
     counts: Dict[str, int] = {}
     tset = set(tokens)
-    for intent, words in INTENT_TOKENS.items():
-        hits = sum(1 for w in words if w in tset)
+    for intent, words in ASK_VOCAB.global_intent_tokens().items():
+        hits = len(tset & set(words))
         if hits:
             counts[intent] = hits
     if not counts:
@@ -324,60 +179,197 @@ def _parse_weight(value: Any, default: float = 1.0) -> float:
         return default
 
 
+class _AskVocabulary:
+    def __init__(self, ttl_seconds: int = 60):
+        self._ttl_seconds = ttl_seconds
+        self._expires_at = 0.0
+        self._global_tokens: Dict[str, Set[str]] = {}
+        self._entity_meta: Dict[str, Dict[str, Any]] = {}
+
+    def invalidate(self) -> None:
+        self._expires_at = 0.0
+
+    def _ensure(self) -> None:
+        if time.time() >= self._expires_at:
+            self._reload()
+
+    def _reload(self) -> None:
+        global_tokens: Dict[str, Set[str]] = defaultdict(set)
+        entity_meta: Dict[str, Dict[str, Any]] = {}
+        for entity, doc in registry_service.iter_documents():
+            meta = self._build_entity_meta(doc or {})
+            entity_meta[entity] = meta
+            for intent, tokens in meta.get("intent_tokens", {}).items():
+                if tokens:
+                    global_tokens[intent].update(tokens)
+        self._global_tokens = {k: frozenset(v) for k, v in global_tokens.items()}
+        self._entity_meta = entity_meta
+        self._expires_at = time.time() + self._ttl_seconds
+
+    def _build_entity_meta(self, doc: Dict[str, Any]) -> Dict[str, Any]:
+        ask_block = doc.get("ask") or {}
+        intents = self._unique(_ensure_list(ask_block.get("intents")))
+        keywords = _ensure_list(ask_block.get("keywords"))
+        keywords_norm = list(dict.fromkeys(_tokenize_list(keywords)))
+        latest_words = _ensure_list(ask_block.get("latest_words"))
+        latest_norm = [
+            _unaccent_lower(w)
+            for w in latest_words
+            if isinstance(w, str) and _unaccent_lower(w)
+        ]
+        weights = self._extract_weights(ask_block, {})
+        synonyms_map = self._extract_synonyms(ask_block)
+        synonyms_normalized: Dict[str, Set[str]] = defaultdict(set)
+        synonym_sources: List[Dict[str, Any]] = []
+        base_syn_weight = weights.get("synonyms", 2.0)
+        for intent, words in synonyms_map.items():
+            tokens = self._normalize_tokens(words)
+            if tokens:
+                synonyms_normalized[intent].update(tokens)
+                synonym_sources.append(
+                    {"intent": intent, "tokens": frozenset(tokens), "weight": base_syn_weight}
+                )
+
+        columns = self._normalize_columns(doc.get("columns"))
+        for col in columns:
+            ask_meta = col.get("ask") or {}
+            if not isinstance(ask_meta, dict):
+                continue
+            col_intents = self._unique(_ensure_list(ask_meta.get("intents")))
+            for intent in col_intents:
+                if intent and intent not in intents:
+                    intents.append(intent)
+            col_synonyms = self._extract_synonyms(ask_meta)
+            col_weights = self._extract_weights(ask_meta, weights)
+            syn_weight = col_weights.get("synonyms", base_syn_weight)
+            for intent, words in col_synonyms.items():
+                tokens = self._normalize_tokens(words)
+                if tokens:
+                    synonyms_normalized[intent].update(tokens)
+                    synonym_sources.append(
+                        {"intent": intent, "tokens": frozenset(tokens), "weight": syn_weight}
+                    )
+
+        intent_tokens = self._extract_intent_tokens(ask_block)
+
+        return {
+            "intents": intents,
+            "keywords": keywords,
+            "keywords_normalized": keywords_norm,
+            "latest_words": latest_words,
+            "latest_words_normalized": latest_norm,
+            "weights": weights,
+            "synonyms_normalized": {
+                key: sorted(values) for key, values in synonyms_normalized.items()
+            },
+            "synonym_sources": synonym_sources,
+            "intent_tokens": intent_tokens,
+        }
+
+    def entity_meta(self, entity: str) -> Dict[str, Any]:
+        self._ensure()
+        meta = self._entity_meta.get(entity)
+        if meta is None:
+            return self._empty_meta()
+        return meta
+
+    def global_intent_tokens(self) -> Dict[str, Set[str]]:
+        self._ensure()
+        return self._global_tokens
+
+    @staticmethod
+    def _unique(values: List[str]) -> List[str]:
+        seen: Set[str] = set()
+        out: List[str] = []
+        for value in values:
+            if value and value not in seen:
+                seen.add(value)
+                out.append(value)
+        return out
+
+    @staticmethod
+    def _normalize_columns(columns: Any) -> List[Dict[str, Any]]:
+        items: List[Dict[str, Any]] = []
+        for col in columns or []:
+            if isinstance(col, dict):
+                items.append(dict(col))
+            elif isinstance(col, str):
+                items.append({"name": col})
+        return items
+
+    @staticmethod
+    def _extract_synonyms(data: Dict[str, Any]) -> Dict[str, List[str]]:
+        result: Dict[str, List[str]] = {}
+        raw = data.get("synonyms")
+        if isinstance(raw, dict):
+            for key, value in raw.items():
+                result[key] = _ensure_list(value)
+        for key, value in data.items():
+            if isinstance(key, str) and key.startswith("synonyms."):
+                intent = key.split(".", 1)[1]
+                result[intent] = _ensure_list(value)
+        return result
+
+    @staticmethod
+    def _extract_weights(data: Dict[str, Any], base: Dict[str, float]) -> Dict[str, float]:
+        weights = dict(base)
+        raw = data.get("weights")
+        if isinstance(raw, dict):
+            for key, value in raw.items():
+                weights[key] = _parse_weight(value, default=base.get(key, 1.0))
+        for key, value in data.items():
+            if isinstance(key, str) and key.startswith("weights."):
+                name = key.split(".", 1)[1]
+                weights[name] = _parse_weight(value, default=base.get(name, 1.0))
+        if "keywords" not in weights:
+            weights["keywords"] = 1.0
+        if "synonyms" not in weights:
+            weights["synonyms"] = 2.0
+        return weights
+
+    @staticmethod
+    def _normalize_tokens(values: List[str]) -> Set[str]:
+        tokens = set(_tokenize_list(values))
+        if not tokens:
+            tokens = {_unaccent_lower(v) for v in values if isinstance(v, str)}
+        return {t for t in tokens if t}
+
+    @staticmethod
+    def _extract_intent_tokens(data: Dict[str, Any]) -> Dict[str, frozenset[str]]:
+        result: Dict[str, frozenset[str]] = {}
+        raw = data.get("intent_tokens")
+        if isinstance(raw, dict):
+            for key, value in raw.items():
+                values = _ensure_list(value)
+                normalized = {
+                    _unaccent_lower(v)
+                    for v in values
+                    if isinstance(v, str) and _unaccent_lower(v)
+                }
+                if normalized:
+                    result[key] = frozenset(normalized)
+        return result
+
+    @staticmethod
+    def _empty_meta() -> Dict[str, Any]:
+        return {
+            "intents": [],
+            "keywords": [],
+            "keywords_normalized": [],
+            "latest_words": [],
+            "latest_words_normalized": [],
+            "weights": {"keywords": 1.0, "synonyms": 2.0},
+            "synonyms_normalized": {},
+            "synonym_sources": [],
+            "intent_tokens": {},
+        }
+
+
+ASK_VOCAB = _AskVocabulary()
+
+
 def _ask_meta(entity: str) -> Dict[str, Any]:
-    raw = registry_service.get_ask_block(entity)
-    meta: Dict[str, Any] = {}
-    meta["intents"] = _ensure_list(raw.get("intents"))
-
-    # Keywords: manter originais e também versão tokenizada
-    keywords = _ensure_list(raw.get("keywords"))
-    meta["keywords"] = keywords
-    kw_tokens = _tokenize_list(keywords)
-    meta["keywords_normalized"] = kw_tokens
-
-    latest_words = _ensure_list(raw.get("latest_words"))
-    meta["latest_words"] = latest_words
-    meta["latest_words_normalized"] = [_unaccent_lower(w) for w in latest_words]
-
-    synonyms: Dict[str, List[str]] = {}
-    raw_syn = raw.get("synonyms")
-    if isinstance(raw_syn, dict):
-        for key, value in raw_syn.items():
-            vals = _ensure_list(value)
-            # inclui tokens das frases para casar com perguntas reais
-            synonyms[key] = list(dict.fromkeys(_tokenize_list(vals) or vals))
-    for key, value in raw.items():
-        if key.startswith("synonyms."):
-            intent = key.split(".", 1)[1]
-            vals = _ensure_list(value)
-            synonyms[intent] = list(dict.fromkeys(_tokenize_list(vals) or vals))
-    meta["synonyms"] = synonyms
-    meta["synonyms_normalized"] = {
-        key: [_unaccent_lower(v) for v in values] for key, values in synonyms.items()
-    }
-
-    weights: Dict[str, float] = {}
-    raw_weights = raw.get("weights")
-    if isinstance(raw_weights, dict):
-        for key, value in raw_weights.items():
-            weights[key] = _parse_weight(value)
-    for key, value in raw.items():
-        if key.startswith("weights."):
-            name = key.split(".", 1)[1]
-            weights[name] = _parse_weight(value)
-    if "keywords" not in weights:
-        weights["keywords"] = 1.0
-    if "synonyms" not in weights:
-        weights["synonyms"] = 2.0
-    meta["weights"] = weights
-
-    top_k = raw.get("top_k")
-    if isinstance(top_k, (int, float)):
-        meta["top_k"] = int(top_k)
-    elif isinstance(top_k, str) and top_k.isdigit():
-        meta["top_k"] = int(top_k)
-
-    return meta
+    return ASK_VOCAB.entity_meta(entity)
 
 
 def _score_entity(
@@ -391,11 +383,23 @@ def _score_entity(
     keyword_hits = sum(1 for t in tokens if t in kwset)
     score_keywords = keyword_hits * weights.get("keywords", 1.0)
 
+    intent_scores: Dict[str, float] = {}
+    for source in ask_meta.get("synonym_sources", []):
+        intent = source.get("intent")
+        token_set = source.get("tokens")
+        if not intent or not token_set:
+            continue
+        tokens_ref = set(token_set)
+        hits = len(tset & tokens_ref)
+        if not hits:
+            continue
+        weight_syn = float(source.get("weight", weights.get("synonyms", 2.0)))
+        score = hits * weight_syn
+        intent_scores[intent] = intent_scores.get(intent, 0.0) + score
+
     best_intent = None
     best_intent_score = 0.0
-    for intent, words in ask_meta.get("synonyms_normalized", {}).items():
-        hits = sum(1 for t in tokens if t in set(words))
-        score = hits * weights.get("synonyms", 2.0)
+    for intent, score in intent_scores.items():
         if score > best_intent_score:
             best_intent_score = score
             best_intent = intent
@@ -415,19 +419,36 @@ def _score_entity(
 
     total = score_keywords + best_intent_score + score_desc + bonus
 
-    # 🔸 BOOST por família da entidade usando o nosso vocabulário global
     fam = _entity_family(entity)
+    global_tokens = ASK_VOCAB.global_intent_tokens()
+    boost_targets = set(ask_meta.get("intents") or [])
     if fam:
-        fam_tokens = set(INTENT_TOKENS.get(fam, []))
-        fam_hits = sum(1 for t in tokens if t in fam_tokens)
-        # peso moderado para ganhar de empates mas não distorcer casos bons do registry
-        total += fam_hits * 1.5
-        fam_hits = sum(1 for t in tset if t in fam_tokens)
-        # peso um pouco maior p/ dominar empates
-        total += fam_hits * 2.0
-        # bônus extra se a família casa com a intenção global inferida
-        if guessed and fam == guessed:
+        boost_targets.add(fam)
+    for intent in boost_targets:
+        words = global_tokens.get(intent)
+        if not words:
+            continue
+        word_set = set(words)
+        seq_hits = sum(1 for t in tokens if t in word_set)
+        uniq_hits = len(tset & word_set)
+        if seq_hits:
+            total += seq_hits * 1.5
+        if uniq_hits:
+            total += uniq_hits * 2.0
+        if guessed and intent == guessed:
             total += 2.0
+
+    def _mentions_processos_ativos(seq: List[str]) -> bool:
+        for idx, token in enumerate(seq):
+            if token.startswith("process"):
+                window = seq[idx + 1 : idx + 4]
+                if any(w.startswith("ativo") for w in window):
+                    return True
+            if token.startswith("ativo"):
+                window = seq[max(0, idx - 3) : idx]
+                if any(w.startswith("process") for w in window):
+                    return True
+        return False
 
     # 🔸 Micro-heurísticas de desambiguação
     # (1) "preço + (vp|pvp|patrimônio)" → cadastro (relação P/VP)
@@ -445,6 +466,15 @@ def _score_entity(
     ):
         if fam == "dividends":
             total += 3.0
+
+    if _mentions_processos_ativos(tokens):
+        entity_intents = set(ask_meta.get("intents") or [])
+        if "judicial" in entity_intents:
+            total += 5.0
+        if "processos" in entity_intents:
+            total += 2.0
+        if "ativos" in entity_intents:
+            total -= 4.0
 
     # Se ainda não temos uma intenção clara, usar um padrão por NOME DA ENTIDADE
     # Isso garante rótulos consistentes com os testes (prices→precos, dividends→dividends etc.)
@@ -563,7 +593,7 @@ def _has_domain_anchor(tokens: List[str]) -> bool:
     if not tokens:
         return False
     domain = set()
-    for words in INTENT_TOKENS.values():
+    for words in ASK_VOCAB.global_intent_tokens().values():
         domain.update(words)
     tset = set(tokens)
     return bool(tset & domain)
@@ -688,17 +718,33 @@ def _resolve_date_range(
 
 
 def _extract_tickers(text: str, valid: set[str]) -> List[str]:
-    tokens = set(_tokenize(text))
+    tokens = _tokenize(text)
     found: List[str] = []
+    seen: Set[str] = set()
+    has_valid = bool(valid)
+    pattern = re.compile(r"^[A-Za-z]{4}\d{2}$")
+
     for token in tokens:
         candidate = token.upper()
-        if candidate in valid:
-            found.append(candidate)
+        if has_valid:
+            if candidate in valid and candidate not in seen:
+                found.append(candidate)
+                seen.add(candidate)
+        else:
+            if pattern.fullmatch(candidate) and candidate not in seen:
+                found.append(candidate)
+                seen.add(candidate)
+
     for token in tokens:
         if len(token) == 4 and token.isalpha():
             candidate = token.upper() + "11"
-            if candidate in valid and candidate not in found:
+            if has_valid:
+                if candidate in valid and candidate not in seen:
+                    found.append(candidate)
+                    seen.add(candidate)
+            elif candidate not in seen:
                 found.append(candidate)
+                seen.add(candidate)
     return found
 
 

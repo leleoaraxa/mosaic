@@ -93,3 +93,36 @@ ask:
     - '1'
     synonyms:
     - '2'
+  intent_tokens:
+    dividends:
+    - dividendo
+    - dividendos
+    - provento
+    - proventos
+    - yield
+    - dy
+    - rendimento
+    - pagamento
+    - pagamentos
+    precos:
+    - preço
+    - preços
+    - cotação
+    - valor
+    cadastro:
+    - cnpj
+    - administrador
+    - gestão
+    ativos:
+    - ativo
+    - ativos
+    - carteira
+    judicial:
+    - processo
+    - judicial
+    indicadores:
+    - ipca
+    - igpm
+    - incc
+    - selic
+    - cdi

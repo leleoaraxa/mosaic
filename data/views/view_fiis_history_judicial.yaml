@@ -52,6 +52,7 @@ ask:
   keywords:
   - judicial
   - processo
+  - processos
   - ação
   - instância
   - valor da causa
@@ -73,8 +74,40 @@ ask:
     - cvm
     - trabalhista
     - cível
+  latest_words:
+  - hoje
+  - último
+  - recente
   weights:
     keywords:
     - '1'
     synonyms:
     - '2'
+  intent_tokens:
+    judicial:
+    - processo
+    - processos
+    - judicial
+    - ação
+    - instância
+    ativos:
+    - imóvel
+    - imóveis
+    - portfólio
+    - galpão
+    - shopping
+    precos:
+    - preço
+    - preços
+    - cotação
+    dividends:
+    - dividendo
+    - provento
+    - yield
+    - dy
+    indicadores:
+    - ipca
+    - igpm
+    - incc
+    - selic
+    - cdi
