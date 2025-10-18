@@ -32,3 +32,8 @@ def build_context(question: str) -> QuestionContext:
         guessed_intent=guessed,
         has_domain_anchor=anchor,
     )
+
+
+# Expor o builder como API pública mantendo compat com QuestionContext.build(...)
+# (lado seguro: não cria ciclo, pois models NÃO importa context_builder)
+QuestionContext.build = staticmethod(build_context)

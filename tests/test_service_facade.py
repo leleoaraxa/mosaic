@@ -15,7 +15,7 @@ def test_build_run_request_targets_top_entity():
     assert run_request["limit"] == 1
 
 
-def test_route_question_facade_forwards_to_routing(stub_routing_dependencies):
+def test_route_question_facade_forwards_to_routing():
     response = route_question({"question": "qual o último dividendo do HGLG11"})
 
     assert response["status"]["reason"] == "ok"

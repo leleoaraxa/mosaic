@@ -7,6 +7,9 @@ from .cache import warm_up_ticker_cache
 from .models import QuestionContext
 from .routing import route_question as _route_question
 from .planning import plan_question, default_date_field
+from . import (
+    context_builder as _context_builder,
+)
 
 
 def build_run_request(
@@ -32,4 +35,5 @@ __all__ = [
     "default_date_field",
     "build_run_request",
     "route_question",
+    "_context_builder",
 ]

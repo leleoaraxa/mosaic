@@ -37,14 +37,3 @@ class EntityScore:
     entity: str
     intent: Optional[str]
     score: float
-
-
-from .context_builder import build_context as _build_context
-
-
-def _qc_build(question: str) -> "QuestionContext":
-    return _build_context(question)
-
-
-# Monkey-patch classmethod (keeps external API)
-QuestionContext.build = staticmethod(_qc_build)
