@@ -52,11 +52,16 @@ ask:
   keywords:
   - judicial
   - processo
+  - processos
+  - ações judiciais
   - ação
+  - ações
   - instância
+  - instâncias
   - valor da causa
   - riscos
   - litígio
+  - litígios
   - decisão
   - cível
   - trabalhista
@@ -65,16 +70,41 @@ ask:
   synonyms:
     judicial:
     - processo
+    - processos
     - ação
+    - ações
     - litígio
+    - litígios
     - demanda
     - causa
     - processos administrativos
     - cvm
     - trabalhista
     - cível
+    - processado
+    - processados
+    - processada
+    - processadas
+  latest_words:
+  - hoje
+  - último
+  - recente
   weights:
     keywords:
     - '1'
     synonyms:
     - '2'
+  intent_tokens:
+    judicial:
+    - processo
+    - processos
+    - judicial
+    - judiciais
+    - ação
+    - ações
+    - instância
+    - instâncias
+    - litígio
+    - litígios
+    - processado
+    - processados

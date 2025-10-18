@@ -32,12 +32,28 @@ columns:
 - name: management_type
   description: Tipo de gestão (ativa/passiva).
   alias: Tipo de gestão
+  ask:
+    intents:
+    - cadastro
+    synonyms:
+      cadastro:
+      - gestão ativa
+      - gestão passiva
+      - ativa
+      - passiva
 - name: target_market
   description: Público alvo.
   alias: Público alvo
 - name: is_exclusive
   description: Indica se o fundo é exclusivo (boolean).
   alias: Fundo exclusivo
+  ask:
+    intents:
+    - cadastro
+    synonyms:
+      cadastro:
+      - fundo exclusivo
+      - exclusivo
 - name: isin
   description: Código ISIN do fundo.
   alias: Código ISIN
@@ -47,6 +63,14 @@ columns:
 - name: website_url
   description: URL oficial do fundo.
   alias: Site oficial
+  ask:
+    intents:
+    - cadastro
+    synonyms:
+      cadastro:
+      - site oficial
+      - website
+      - site
 - name: admin_name
   description: Nome do administrador do fundo.
   alias: Administrador
@@ -80,33 +104,108 @@ columns:
 - name: market_cap_value
   description: Valor de mercado do fundo.
   alias: Valor de mercado
+  ask:
+    intents:
+    - cadastro
+    synonyms:
+      cadastro:
+      - valor de mercado
+      - market cap
 - name: enterprise_value
   description: Enterprise value (valor da firma).
   alias: Valor da firma
+  ask:
+    intents:
+    - cadastro
+    synonyms:
+      cadastro:
+      - enterprise value
+      - valor da firma
+      - ev
 - name: price_book_ratio
   description: Índice Preço/Patrimônio.
   alias: P/VP
+  ask:
+    intents:
+    - cadastro
+    synonyms:
+      cadastro:
+      - p/vp
+      - preço sobre patrimônio
+      - preço patrimônio
 - name: equity_per_share
   description: Patrimônio líquido por cota.
   alias: VPA
+  ask:
+    intents:
+    - cadastro
+    synonyms:
+      cadastro:
+      - equity per share
+      - patrimônio por cota
+      - vpa
 - name: revenue_per_share
   description: Receita por cota.
   alias: Receita por cota
+  ask:
+    intents:
+    - cadastro
+    synonyms:
+      cadastro:
+      - revenue per share
+      - retorno por cota
+      - receita por cota
 - name: dividend_payout_pct
   description: Payout ratio em percentual.
   alias: Dividend Payout
+  ask:
+    intents:
+    - cadastro
+    synonyms:
+      cadastro:
+      - dividend payout
+      - payout
+      - índice de payout
 - name: growth_rate
   description: Taxa de crescimento percentual.
   alias: Crescimento do patrimônio
+  ask:
+    intents:
+    - cadastro
+    synonyms:
+      cadastro:
+      - taxa de crescimento
+      - crescimento
 - name: cap_rate
   description: Cap rate percentual.
   alias: Taxa de capitalização
+  ask:
+    intents:
+    - cadastro
+    synonyms:
+      cadastro:
+      - cap rate
+      - taxa de capitalização
 - name: volatility_ratio
   description: Volatilidade percentual.
   alias: Volatilidade
+  ask:
+    intents:
+    - cadastro
+    synonyms:
+      cadastro:
+      - volatilidade
 - name: sharpe_ratio
   description: Índice de Sharpe.
   alias: Sharpe
+  ask:
+    intents:
+    - cadastro
+    synonyms:
+      cadastro:
+      - sharpe
+      - índice de sharpe
+      - sharpe ratio
 - name: treynor_ratio
   description: Índice de Treynor.
   alias: Treynor
@@ -248,6 +347,7 @@ ask:
   - perfil
   - cnpj
   - site
+  - website
   - administrador
   - custodiante
   - gestor
@@ -258,6 +358,12 @@ ask:
   - ipo
   - isin
   - b3
+  - constituição
+  - enterprise value
+  - taxa de crescimento
+  - retorno por cota
+  - gestão ativa
+  - gestão passiva
   synonyms:
     cadastro:
     - cadastro
@@ -269,6 +375,8 @@ ask:
     - gestor
     - custodiante
     - site
+    - site oficial
+    - website
     - tipo
     - segmento
     - classificação
@@ -277,17 +385,27 @@ ask:
     - isin
     - nome b3
     - valor de mercado
-    - p/vp
     - market cap
+    - p/vp
+    - preço sobre patrimônio
     - sharpe
     - volatilidade
     - dividend payout
+    - índice de payout
     - cap rate
     - ev
+    - enterprise value
     - eps
     - rps
     - equity per share
     - revenue per share
+    - data de constituição
+    - constituição
+    - gestão ativa
+    - gestão passiva
+    - taxa de crescimento
+    - crescimento
+    - retorno por cota
   latest_words:
   - último
   - últimos
@@ -314,3 +432,41 @@ ask:
     - '1'
     synonyms:
     - '2'
+  intent_tokens:
+    cadastro:
+    - cnpj
+    - administrador
+    - custodiante
+    - gestão
+    - gestao
+    - público
+    - alvo
+    - ipo
+    - isin
+    - segmento
+    - website
+    - site
+    - oficial
+    - exclusivo
+    - constituição
+    - constituicao
+    - patrimônio
+    - patrimonio
+    - pvp
+    - payout
+    - enterprise
+    - value
+    - equity
+    - crescimento
+    - taxa
+    - retorno
+    - cota
+    - cap
+    - rate
+    - market
+    - volatilidade
+    - sharpe
+    - gestão ativa
+    - gestão passiva
+    - data de constituição
+    - retorno por cota
