@@ -14,7 +14,7 @@ from app.observability.logging import (
     setup_json_logging,
 )
 from app.observability.metrics import APP_UP, prime_api_series
-from app.orchestrator.service import _refresh_tickers_cache
+from app.orchestrator.service import warm_up_ticker_cache
 from app.registry.preloader import preload_views
 
 # inicializa logging antes de criar app
@@ -36,7 +36,7 @@ async def lifespan(app: FastAPI):
         APP_UP.set(1)
         _ = healthz_full()
         try:
-            _refresh_tickers_cache()  # aquece cache de tickers
+            warm_up_ticker_cache()  # aquece cache de tickers
         except Exception as e:
             logger.warning("warm-up tickers falhou: %s", e)
     except Exception:

@@ -277,8 +277,8 @@ O coração do envelope v4 reside em `app/orchestrator/service.py`. Principais e
 
 - **Cache de tickers**:
   - `_CACHE = get_cache_backend()` e `_TICKERS_KEY = "tickers:list:v1"` (namespaced automaticamente).
-  - `_refresh_tickers_cache()` consulta `executor_service.run("SELECT ticker FROM view_fiis_info…")`, salva JSON com TTL `settings.tickers_cache_ttl`.
-  - `_load_valid_tickers(force=False)` tenta `get` no cache; se falhar, chama `_refresh_tickers_cache()`. O TTL padrão vem de settings (ex.: 300s).
+- `TickerCache` encapsula a carga dos tickers (`executor_service.run("SELECT ticker FROM view_fiis_info…")`) e publica `load()/extract()` com TTL `settings.tickers_cache_ttl` (cache-first, fallback para consulta ao DB).
+- `QuestionContext.build(question)` reaproveita `TickerCache.extract` + tokenização (`_tokenize`) e já marca `has_domain_anchor` para o guarda de domínio do `/ask`.
 
 - **Helpers de metadados**:
   - `_meta(entity)` e `_cols(entity)` consultam `registry_service`.
@@ -295,7 +295,7 @@ O coração do envelope v4 reside em `app/orchestrator/service.py`. Principais e
   - `_resolve_date_range(question, explicit_range)` combina data explícita do payload (`date_range.from/to`) com as inferidas.
 
 - **Planejamento e filtros**:
-  - `_plan_question(question, entity, intent, payload)` junta tickers extraídos (`_extract_tickers` + cache) e datas resolvidas. Cria `planner_filters` (para telemetria) e `run_request` pronto para normalização.
+- `_plan_question(ctx, entity, intent, payload)` reaproveita `QuestionContext` (tickers + texto normalizado) e datas resolvidas. Cria `planner_filters` (para telemetria) e `run_request` pronto para normalização.
   - Regras de ordenação: se `latest_words` casarem, força `order_by` DESC por `default_date_field`, `limit = 1`. Se pergunta contiver `entre` e houver data, ordena ASC.
 
 - **Cliente e trace**:
@@ -309,18 +309,18 @@ O coração do envelope v4 reside em `app/orchestrator/service.py`. Principais e
 
 | Função | Assinatura | Descrição |
 | ------ | ---------- | --------- |
-| `_refresh_tickers_cache()` | `() -> List[str]` | Atualiza cache de tickers consultando DB; TTL controlado por `settings.tickers_cache_ttl`. |
-| `_load_valid_tickers(force=False)` | `(bool) -> set[str]` | Obtém tickers (cache-first). |
+| `TickerCache.load(force=False)` | `(bool) -> Set[str]` | Obtém tickers (cache-first) e tenta atualizar do DB com TTL `settings.tickers_cache_ttl`. |
+| `TickerCache.extract(text)` | `(str) -> List[str]` | Detecta tickers (XXXX11) reaproveitando o cache carregado. |
 | `_tokenize(text)` | `(str) -> List[str]` | Normaliza texto (unaccent + regex `[a-z0-9]{2,}`). |
 | `_ask_meta(entity)` | `(str) -> Dict[str, Any]` | Extrai intents, keywords, synonyms, weights, latest_words, top_k. |
 | `_score_entity(tokens, entity)` | `(List[str], str) -> Tuple[float, Optional[str]]` | Calcula score ponderado e melhor intent. |
-| `_choose_entity_by_ask(question)` | `(str) -> Tuple[Optional[str], Optional[str], float]` | Retorna melhor entidade+intent. |
-| `_choose_entities_by_ask(question)` | `(str) -> List[Tuple[str, str, float]]` | Lista entidades ranqueadas (para multi-intenção). |
+| `_choose_entity_by_ask(ctx)` | `(QuestionContext) -> Tuple[Optional[str], Optional[str], float]` | Retorna melhor entidade+intent. |
+| `_choose_entities_by_ask(ctx)` | `(QuestionContext) -> List[Tuple[str, str, float]]` | Lista entidades ranqueadas (para multi-intenção). |
 | `_relative_date_range(text_norm)` | `(str) -> Dict[str, str]` | Interpreta frases relativas (últimos meses, mês anterior, ano atual). |
 | `_extract_dates_range(text)` | `(str) -> Dict[str, str]` | Detecta range explícito `entre dd/mm/aaaa e dd/mm/aaaa` e delega para `_relative_date_range`. |
 | `_resolve_date_range(question, explicit_range)` | `(str, Optional[Dict[str, Any]]) -> Dict[str, str]` | Consolida datas do payload + inferidas. |
-| `_extract_tickers(text, valid)` | `(str, set[str]) -> List[str]` | Detecta tickers e variantes (XXXX + sufixo 11 implícito). |
-| `_plan_question(question, entity, intent, payload)` | `(str, str, Optional[str], Dict[str, Any]) -> Dict[str, Any]` | Prepara `run_request`, `planner`, lista `tickers` detectados. |
+| `QuestionContext.build(question)` | `(str) -> QuestionContext` | Produz tokens, tickers, intent inferida e texto normalizado para a pergunta. |
+| `_plan_question(ctx, entity, intent, payload)` | `(QuestionContext, str, Optional[str], Dict[str, Any]) -> Dict[str, Any]` | Prepara `run_request`, `planner`, reaproveitando tickers do contexto. |
 | `_client_echo(raw)` | `(Optional[Dict[str, Any]]) -> Dict[str, Any]` | Normaliza bloco `client` na resposta (ecoando IDs, saldos). |
 | `build_run_request(question, overrides=None)` | `(str, Optional[Dict[str, Any]]) -> Dict[str, Any]` | Retorna `run_request` resolvido (erro se score < min). |
 | `route_question(payload)` | `(Dict[str, Any]) -> Dict[str, Any]` | Orquestra NL→SQL, atualiza métricas, devolve envelope completo. |
@@ -329,7 +329,7 @@ O coração do envelope v4 reside em `app/orchestrator/service.py`. Principais e
 
 | Função | Assinatura | Responsabilidade |
 | ------ | ---------- | ---------------- |
-| `lifespan(app)` | `asynccontextmanager` | Antes de servir: `prime_api_series()`, `preload_views()`, `healthz_full()`, `_refresh_tickers_cache()`. Inicia tarefa periódica (30s) para atualizar `APP_UP` e revalidar saúde. No final: define `APP_UP=0`, cancela tarefa, fecha `executor_service.pool`. |
+| `lifespan(app)` | `asynccontextmanager` | Antes de servir: `prime_api_series()`, `preload_views()`, `healthz_full()`, `warm_up_ticker_cache()`. Inicia tarefa periódica (30s) para atualizar `APP_UP` e revalidar saúde. No final: define `APP_UP=0`, cancela tarefa, fecha `executor_service.pool`. |
 | `create_app()` | `() -> FastAPI` | Configura `FastAPI(title="Sirios Mosaic", lifespan=lifespan)`, aplica `RequestIdMiddleware`, inclui `gateway_router`, monta `/metrics` (`make_asgi_app()`), retorna instância. |
 | `app` | Instância global | Resultado de `create_app()` importável por WSGI/ASGI servers. |
 

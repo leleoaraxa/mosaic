@@ -10,6 +10,7 @@ import time
 import unicodedata
 import uuid
 from collections import defaultdict
+from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta
 from typing import Any, Dict, List, Optional, Set, Tuple
 
@@ -37,9 +38,90 @@ logger = logging.getLogger("orchestrator")
 _CACHE = get_cache_backend()
 _TICKERS_KEY = "tickers:list:v1"  # será namespaced pelo NamespacedCache
 
+
+class TickerCache:
+    """Caches valid tickers and provides helpers to extract them from text."""
+
+    def __init__(self, backend, cache_key: str, ttl_seconds: int) -> None:
+        self._backend = backend
+        self._cache_key = cache_key
+        self._ttl_seconds = int(ttl_seconds)
+
+    def load(self, force: bool = False) -> Set[str]:
+        if not force:
+            try:
+                raw = self._backend.get(self._cache_key)
+                if raw:
+                    return set(json.loads(raw))
+            except Exception:  # pragma: no cover - cache best effort
+                pass
+        try:
+            return self._refresh()
+        except Exception as ex:  # pragma: no cover
+            logger.warning("falha ao atualizar cache de tickers: %s", ex)
+            return set()
+
+    def _refresh(self) -> Set[str]:
+        rows = executor_service.run(
+            "SELECT ticker FROM view_fiis_info ORDER BY ticker;", {}
+        )
+        tickers = [str(r.get("ticker", "")).upper() for r in rows if r.get("ticker")]
+        payload = json.dumps(tickers)
+        try:
+            self._backend.set(
+                self._cache_key,
+                payload,
+                ttl_seconds=self._ttl_seconds,
+            )
+        except Exception as ex:  # pragma: no cover - cache best effort
+            logger.warning("falha ao gravar tickers no cache: %s", ex)
+        logger.info("cache de tickers atualizado: %s registros", len(tickers))
+        return set(tickers)
+
+    def extract(self, text: str) -> List[str]:
+        valid = self.load()
+        tokens = _tokenize(text)
+        found: List[str] = []
+        seen: Set[str] = set()
+        has_valid = bool(valid)
+        pattern = re.compile(r"^[A-Za-z]{4}\d{2}$")
+
+        for token in tokens:
+            candidate = token.upper()
+            if has_valid:
+                if candidate in valid and candidate not in seen:
+                    found.append(candidate)
+                    seen.add(candidate)
+            elif pattern.fullmatch(candidate) and candidate not in seen:
+                found.append(candidate)
+                seen.add(candidate)
+
+        for token in tokens:
+            if len(token) == 4 and token.isalpha():
+                candidate = token.upper() + "11"
+                if has_valid:
+                    if candidate in valid and candidate not in seen:
+                        found.append(candidate)
+                        seen.add(candidate)
+                elif candidate not in seen:
+                    found.append(candidate)
+                    seen.add(candidate)
+        return found
+
+
+TICKER_CACHE = TickerCache(_CACHE, _TICKERS_KEY, settings.tickers_cache_ttl)
+
+
 # ---------------------------------------------------------------------------
 # 🔹 Cache e utilidades básicas
 # ---------------------------------------------------------------------------
+
+
+def warm_up_ticker_cache() -> None:
+    """Recarrega a lista de tickers durante o boot da aplicação."""
+    TICKER_CACHE.load(force=True)
+
+
 def _entity_family(entity: str) -> Optional[str]:
     n = (entity or "").lower()
     if "prices" in n:
@@ -50,50 +132,12 @@ def _entity_family(entity: str) -> Optional[str]:
         return "judicial"
     if "info" in n or "cadastro" in n:
         return "cadastro"
-    if "assets" in n:
-        # assets = composição (cotas/CRIs) → 'ativos'
-        return "ativos"
-    if "properties" in n or "imoveis" in n or "properties" in n:
-        # views de propriedades físicas
+    if "assets" in n or "properties" in n or "imoveis" in n:
+        # assets = composição imobiliária (CRIs/imóveis)
         return "imoveis"
     if "indicator" in n or "indicators" in n or "macro" in n or "tax" in n:
         return "indicadores"
     return None
-
-
-def _refresh_tickers_cache() -> List[str]:
-    """Recarrega do DB e salva no cache com TTL."""
-    rows = executor_service.run(
-        "SELECT ticker FROM view_fiis_info ORDER BY ticker;", {}
-    )
-    tickers = [str(r.get("ticker", "")).upper() for r in rows if r.get("ticker")]
-    try:
-        _CACHE.set(
-            _TICKERS_KEY,
-            json.dumps(tickers),
-            ttl_seconds=int(settings.tickers_cache_ttl),
-        )
-    except Exception as ex:  # pragma: no cover - cache best effort
-        logger.warning("falha ao gravar tickers no cache: %s", ex)
-    logger.info("cache de tickers atualizado: %s registros", len(tickers))
-    return tickers
-
-
-def _load_valid_tickers(force: bool = False) -> set[str]:
-    """Obtém tickers do cache; se vazio/force, repovoa a partir do DB."""
-    if not force:
-        try:
-            raw = _CACHE.get(_TICKERS_KEY)
-            if raw:
-                data = json.loads(raw)
-                return set(data)
-        except Exception:  # pragma: no cover - cache best effort
-            pass
-    try:
-        return set(_refresh_tickers_cache())
-    except Exception as ex:  # pragma: no cover
-        logger.warning("falha ao atualizar cache de tickers: %s", ex)
-        return set()
 
 
 def _unaccent_lower(value: str) -> str:
@@ -179,12 +223,31 @@ def _parse_weight(value: Any, default: float = 1.0) -> float:
         return default
 
 
+@dataclass(frozen=True)
+class SynonymSource:
+    intent: str
+    tokens: frozenset[str]
+    weight: float
+
+
+@dataclass(frozen=True)
+class EntityAskMeta:
+    intents: Tuple[str, ...] = ()
+    keywords_normalized: Tuple[str, ...] = ()
+    latest_words_normalized: Tuple[str, ...] = ()
+    weights: Dict[str, float] = field(
+        default_factory=lambda: {"keywords": 1.0, "synonyms": 2.0}
+    )
+    synonym_sources: Tuple[SynonymSource, ...] = ()
+    intent_tokens: Dict[str, frozenset[str]] = field(default_factory=dict)
+
+
 class _AskVocabulary:
     def __init__(self, ttl_seconds: int = 60):
         self._ttl_seconds = ttl_seconds
         self._expires_at = 0.0
         self._global_tokens: Dict[str, Set[str]] = {}
-        self._entity_meta: Dict[str, Dict[str, Any]] = {}
+        self._entity_meta: Dict[str, EntityAskMeta] = {}
 
     def invalidate(self) -> None:
         self._expires_at = 0.0
@@ -195,18 +258,18 @@ class _AskVocabulary:
 
     def _reload(self) -> None:
         global_tokens: Dict[str, Set[str]] = defaultdict(set)
-        entity_meta: Dict[str, Dict[str, Any]] = {}
+        entity_meta: Dict[str, EntityAskMeta] = {}
         for entity, doc in registry_service.iter_documents():
             meta = self._build_entity_meta(doc or {})
             entity_meta[entity] = meta
-            for intent, tokens in meta.get("intent_tokens", {}).items():
+            for intent, tokens in meta.intent_tokens.items():
                 if tokens:
                     global_tokens[intent].update(tokens)
         self._global_tokens = {k: frozenset(v) for k, v in global_tokens.items()}
         self._entity_meta = entity_meta
         self._expires_at = time.time() + self._ttl_seconds
 
-    def _build_entity_meta(self, doc: Dict[str, Any]) -> Dict[str, Any]:
+    def _build_entity_meta(self, doc: Dict[str, Any]) -> EntityAskMeta:
         ask_block = doc.get("ask") or {}
         intents = self._unique(_ensure_list(ask_block.get("intents")))
         keywords = _ensure_list(ask_block.get("keywords"))
@@ -220,14 +283,14 @@ class _AskVocabulary:
         weights = self._extract_weights(ask_block, {})
         synonyms_map = self._extract_synonyms(ask_block)
         synonyms_normalized: Dict[str, Set[str]] = defaultdict(set)
-        synonym_sources: List[Dict[str, Any]] = []
+        synonym_sources: List[SynonymSource] = []
         base_syn_weight = weights.get("synonyms", 2.0)
         for intent, words in synonyms_map.items():
             tokens = self._normalize_tokens(words)
             if tokens:
                 synonyms_normalized[intent].update(tokens)
                 synonym_sources.append(
-                    {"intent": intent, "tokens": frozenset(tokens), "weight": base_syn_weight}
+                    SynonymSource(intent=intent, tokens=frozenset(tokens), weight=base_syn_weight)
                 )
 
         columns = self._normalize_columns(doc.get("columns"))
@@ -247,26 +310,21 @@ class _AskVocabulary:
                 if tokens:
                     synonyms_normalized[intent].update(tokens)
                     synonym_sources.append(
-                        {"intent": intent, "tokens": frozenset(tokens), "weight": syn_weight}
+                        SynonymSource(intent=intent, tokens=frozenset(tokens), weight=syn_weight)
                     )
 
         intent_tokens = self._extract_intent_tokens(ask_block)
 
-        return {
-            "intents": intents,
-            "keywords": keywords,
-            "keywords_normalized": keywords_norm,
-            "latest_words": latest_words,
-            "latest_words_normalized": latest_norm,
-            "weights": weights,
-            "synonyms_normalized": {
-                key: sorted(values) for key, values in synonyms_normalized.items()
-            },
-            "synonym_sources": synonym_sources,
-            "intent_tokens": intent_tokens,
-        }
+        return EntityAskMeta(
+            intents=tuple(intents),
+            keywords_normalized=tuple(keywords_norm),
+            latest_words_normalized=tuple(latest_norm),
+            weights=dict(weights),
+            synonym_sources=tuple(synonym_sources),
+            intent_tokens=intent_tokens,
+        )
 
-    def entity_meta(self, entity: str) -> Dict[str, Any]:
+    def entity_meta(self, entity: str) -> EntityAskMeta:
         self._ensure()
         meta = self._entity_meta.get(entity)
         if meta is None:
@@ -351,18 +409,8 @@ class _AskVocabulary:
         return result
 
     @staticmethod
-    def _empty_meta() -> Dict[str, Any]:
-        return {
-            "intents": [],
-            "keywords": [],
-            "keywords_normalized": [],
-            "latest_words": [],
-            "latest_words_normalized": [],
-            "weights": {"keywords": 1.0, "synonyms": 2.0},
-            "synonyms_normalized": {},
-            "synonym_sources": [],
-            "intent_tokens": {},
-        }
+    def _empty_meta() -> EntityAskMeta:
+        return EntityAskMeta()
 
 
 ASK_VOCAB = _AskVocabulary()
@@ -372,28 +420,28 @@ def _ask_meta(entity: str) -> Dict[str, Any]:
     return ASK_VOCAB.entity_meta(entity)
 
 
-def _score_entity(
-    tokens: List[str], entity: str, guessed: Optional[str]
-) -> Tuple[float, Optional[str]]:
+def _score_entity(ctx: QuestionContext, entity: str) -> Tuple[float, Optional[str]]:
+    tokens = ctx.tokens
+    guessed = ctx.guessed_intent
     tset = set(tokens)
     ask_meta = _ask_meta(entity)
-    weights = ask_meta.get("weights", {})
+    weights = ask_meta.weights
 
-    kwset = set(ask_meta.get("keywords_normalized", []))
+    kwset = set(ask_meta.keywords_normalized)
     keyword_hits = sum(1 for t in tokens if t in kwset)
     score_keywords = keyword_hits * weights.get("keywords", 1.0)
 
     intent_scores: Dict[str, float] = {}
-    for source in ask_meta.get("synonym_sources", []):
-        intent = source.get("intent")
-        token_set = source.get("tokens")
+    for source in ask_meta.synonym_sources:
+        intent = source.intent
+        token_set = source.tokens
         if not intent or not token_set:
             continue
         tokens_ref = set(token_set)
         hits = len(tset & tokens_ref)
         if not hits:
             continue
-        weight_syn = float(source.get("weight", weights.get("synonyms", 2.0)))
+        weight_syn = float(source.weight or weights.get("synonyms", 2.0))
         score = hits * weight_syn
         intent_scores[intent] = intent_scores.get(intent, 0.0) + score
 
@@ -414,14 +462,14 @@ def _score_entity(
     if guessed:
         if best_intent and guessed == best_intent:
             bonus += 3.0  # forte aderência
-        if _intent_matches(ask_meta.get("intents") or [], guessed):
+        if _intent_matches(list(ask_meta.intents), guessed):
             bonus += 2.0  # a view declara essa família
 
     total = score_keywords + best_intent_score + score_desc + bonus
 
     fam = _entity_family(entity)
     global_tokens = ASK_VOCAB.global_intent_tokens()
-    boost_targets = set(ask_meta.get("intents") or [])
+    boost_targets = set(ask_meta.intents or [])
     if fam:
         boost_targets.add(fam)
     for intent in boost_targets:
@@ -437,6 +485,38 @@ def _score_entity(
             total += uniq_hits * 2.0
         if guessed and intent == guessed:
             total += 2.0
+
+    # 🔸 Heurísticas específicas por domínio para reduzir ambiguidades
+    dividends_hits = tset & set(global_tokens.get("dividends", ()))
+    if dividends_hits:
+        if fam == "dividends":
+            total += len(dividends_hits) * 2.5
+        elif fam == "precos":
+            total -= len(dividends_hits) * 1.5
+
+    indicator_hits = tset & set(global_tokens.get("indicadores", ()))
+    if indicator_hits:
+        if fam == "indicadores" or {"indicadores", "mercado", "taxas"} & set(ask_meta.intents):
+            total += len(indicator_hits) * 3.0
+        else:
+            total -= len(indicator_hits) * 1.2
+
+    judicial_hits = tset & set(global_tokens.get("judicial", ()))
+    if judicial_hits:
+        if fam == "judicial" or "judicial" in ask_meta.intents:
+            total += len(judicial_hits) * 2.0
+        else:
+            total -= len(judicial_hits) * 1.0
+
+    imoveis_hits = tset & set(global_tokens.get("imoveis", ()))
+    if fam == "imoveis":
+        if imoveis_hits:
+            total += len(imoveis_hits) * 1.5
+        else:
+            total *= 0.4
+    elif imoveis_hits and fam == "cadastro":
+        # Perguntas de cadastro envolvendo imóveis ainda fazem parte da ficha.
+        total += len(imoveis_hits) * 0.5
 
     def _mentions_processos_ativos(seq: List[str]) -> bool:
         for idx, token in enumerate(seq):
@@ -468,7 +548,7 @@ def _score_entity(
             total += 3.0
 
     if _mentions_processos_ativos(tokens):
-        entity_intents = set(ask_meta.get("intents") or [])
+        entity_intents = set(ask_meta.intents or [])
         if "judicial" in entity_intents:
             total += 5.0
         if "processos" in entity_intents:
@@ -489,7 +569,7 @@ def _score_entity(
         if "info" in n or "cadastro" in n:
             return "cadastro"
         if "assets" in n:
-            return "ativos"
+            return "imoveis"
         if "tax" in n or "indicator" in n:
             return "indicadores"
         return None
@@ -508,7 +588,7 @@ def _score_entity(
 
     # 🔸 Escolha do rótulo final (prioriza canônico por família quando o rótulo é genérico)
     if not best_intent:
-        intents = ask_meta.get("intents") or []
+        intents = list(ask_meta.intents)
         if intents:
             best_intent = intents[0]
     # Se a entidade tem família conhecida e o rótulo ficou vazio ou 'historico', usar o canônico
@@ -518,23 +598,24 @@ def _score_entity(
     return total, best_intent
 
 
-def _choose_entity_by_ask(question: str) -> Tuple[Optional[str], Optional[str], float]:
-    tokens = _tokenize(question)
-    guessed = _guess_intent(tokens)
+def _rank_entities(ctx: QuestionContext) -> List[EntityScore]:
     items = registry_service.list_all()
     if not items:
         raise ValueError("Catálogo vazio.")
-    best_entity: Optional[str] = None
-    best_intent: Optional[str] = None
-    best_score = 0.0
+    results: List[EntityScore] = []
     for it in items:
         entity = it["entity"]
-        score, intent = _score_entity(tokens, entity, guessed)
-        if score > best_score:
-            best_entity = entity
-            best_intent = intent
-            best_score = score
-    return best_entity, best_intent, best_score
+        score, intent = _score_entity(ctx, entity)
+        if score > 0:
+            results.append(EntityScore(entity=entity, intent=intent, score=score))
+    return results
+
+
+def _choose_entity_by_ask(ctx: QuestionContext) -> Tuple[Optional[str], Optional[str], float]:
+    ranked = _choose_entities_by_ask(ctx)
+    if not ranked:
+        return None, None, 0.0
+    return ranked[0]
 
 
 # ---------------------------------------------------------------------------
@@ -542,47 +623,33 @@ def _choose_entity_by_ask(question: str) -> Tuple[Optional[str], Optional[str], 
 # ---------------------------------------------------------------------------
 
 
-def _choose_entities_by_ask(question: str) -> List[Tuple[str, str, float]]:
-    tokens = _tokenize(question)
-    guessed = _guess_intent(tokens)
-    items = registry_service.list_all()
-    results: List[Tuple[str, str, float]] = []
+def _choose_entities_by_ask(ctx: QuestionContext) -> List[Tuple[str, str, float]]:
+    scores = _rank_entities(ctx)
+    guessed = ctx.guessed_intent
 
-    for it in items:
-        entity = it["entity"]
-        score, intent = _score_entity(tokens, entity, guessed)
-        if score > 0:
-            results.append((entity, intent, score))
-    # Se houver intenção global inferida, mantenha primeiro os compatíveis
     if guessed:
-        compat: List[Tuple[str, str, float]] = []
-        incomp: List[Tuple[str, str, float]] = []
-        for entity, intent, score in results:
-            am = _ask_meta(entity)
-            if intent == guessed or _intent_matches(am.get("intents") or [], guessed):
-                compat.append((entity, intent, score))
+        compat: List[EntityScore] = []
+        incomp: List[EntityScore] = []
+        for item in scores:
+            meta = _ask_meta(item.entity)
+            if item.intent == guessed or _intent_matches(list(meta.intents), guessed):
+                compat.append(item)
             else:
-                incomp.append((entity, intent, score))
-        # Se houver ao menos um compatível, mantém só eles (evita “historico” indevido em perguntas de “precos”)
+                incomp.append(item)
         if compat:
-            compat.sort(key=lambda x: x[2], reverse=True)
-            results = compat
+            scores = sorted(compat, key=lambda x: x.score, reverse=True)
         else:
-            incomp.sort(key=lambda x: x[2], reverse=True)
-            results = incomp
+            scores = sorted(incomp, key=lambda x: x.score, reverse=True)
     else:
-        # ordena decrescente por score
-        results.sort(key=lambda x: x[2], reverse=True)
+        scores.sort(key=lambda x: x.score, reverse=True)
 
-    # Se a 1ª opção domina a 2ª (margem clara), trunca para Top-1
-    if len(results) >= 2:
-        s1 = results[0][2]
-        s2 = results[1][2]
+    if len(scores) >= 2:
+        s1 = scores[0].score
+        s2 = scores[1].score
         if s2 <= 0 or s1 >= (1.5 * s2):
-            results = [results[0]]
+            scores = scores[:1]
 
-    # ordena decrescente por score
-    return results
+    return [(item.entity, item.intent, item.score) for item in scores]
 
 
 def _has_domain_anchor(tokens: List[str]) -> bool:
@@ -597,6 +664,39 @@ def _has_domain_anchor(tokens: List[str]) -> bool:
         domain.update(words)
     tset = set(tokens)
     return bool(tset & domain)
+
+
+@dataclass
+class QuestionContext:
+    original: str
+    normalized: str
+    tokens: List[str]
+    tickers: List[str]
+    guessed_intent: Optional[str]
+    has_domain_anchor: bool
+
+    @classmethod
+    def build(cls, question: str) -> "QuestionContext":
+        question = question or ""
+        tokens = _tokenize(question)
+        tickers = TICKER_CACHE.extract(question)
+        guessed = _guess_intent(tokens)
+        has_anchor = bool(tickers) or _has_domain_anchor(tokens)
+        return cls(
+            original=question,
+            normalized=_unaccent_lower(question),
+            tokens=tokens,
+            tickers=tickers,
+            guessed_intent=guessed,
+            has_domain_anchor=has_anchor,
+        )
+
+
+@dataclass
+class EntityScore:
+    entity: str
+    intent: Optional[str]
+    score: float
 
 
 def _default_date_field(entity: str) -> Optional[str]:
@@ -717,42 +817,10 @@ def _resolve_date_range(
     return resolved
 
 
-def _extract_tickers(text: str, valid: set[str]) -> List[str]:
-    tokens = _tokenize(text)
-    found: List[str] = []
-    seen: Set[str] = set()
-    has_valid = bool(valid)
-    pattern = re.compile(r"^[A-Za-z]{4}\d{2}$")
-
-    for token in tokens:
-        candidate = token.upper()
-        if has_valid:
-            if candidate in valid and candidate not in seen:
-                found.append(candidate)
-                seen.add(candidate)
-        else:
-            if pattern.fullmatch(candidate) and candidate not in seen:
-                found.append(candidate)
-                seen.add(candidate)
-
-    for token in tokens:
-        if len(token) == 4 and token.isalpha():
-            candidate = token.upper() + "11"
-            if has_valid:
-                if candidate in valid and candidate not in seen:
-                    found.append(candidate)
-                    seen.add(candidate)
-            elif candidate not in seen:
-                found.append(candidate)
-                seen.add(candidate)
-    return found
-
-
 def _plan_question(
-    question: str, entity: str, intent: Optional[str], payload: Dict[str, Any]
+    ctx: QuestionContext, entity: str, intent: Optional[str], payload: Dict[str, Any]
 ) -> Dict[str, Any]:
-    valid_tickers = _load_valid_tickers()
-    tickers = _extract_tickers(question, valid_tickers)
+    tickers = ctx.tickers
     filters: Dict[str, Any] = {}
     planner_filters: Dict[str, Any] = {}
 
@@ -761,7 +829,7 @@ def _plan_question(
         if "ticker" in _cols(entity):
             filters["ticker"] = tickers if len(tickers) > 1 else tickers[0]
 
-    resolved_range = _resolve_date_range(question, payload.get("date_range"))
+    resolved_range = _resolve_date_range(ctx.original, payload.get("date_range"))
     date_field = _default_date_field(entity)
     if date_field:
         planner_filters["date_field"] = date_field
@@ -772,9 +840,9 @@ def _plan_question(
         filters["date_to"] = resolved_range["date_to"]
         planner_filters["date_to"] = resolved_range["date_to"]
 
-    qnorm = _unaccent_lower(question)
+    qnorm = ctx.normalized
     ask_meta = _ask_meta(entity)
-    latest_words_norm = ask_meta.get("latest_words_normalized", [])
+    latest_words_norm = list(ask_meta.latest_words_normalized)
     order_by = None
     limit = settings.ask_default_limit
     if latest_words_norm and any(word in qnorm for word in latest_words_norm):
@@ -840,12 +908,13 @@ def _client_echo(raw: Optional[Dict[str, Any]]) -> Dict[str, Any]:
 def build_run_request(
     question: str, overrides: Optional[Dict[str, Any]] = None
 ) -> Dict[str, Any]:
-    entity, intent, score = _choose_entity_by_ask(question)
+    ctx = QuestionContext.build(question)
+    entity, intent, score = _choose_entity_by_ask(ctx)
     # if not entity or score <= 0:
     # Leleo perguntar
     if not entity or score < settings.ask_min_score:
         raise ValueError("Nenhuma entidade encontrada para a pergunta informada.")
-    plan = _plan_question(question, entity, intent, overrides or {})
+    plan = _plan_question(ctx, entity, intent, overrides or {})
     return plan["run_request"]
 
 
@@ -855,10 +924,8 @@ def route_question(payload: Dict[str, Any]) -> Dict[str, Any]:
     req_id = str(uuid.uuid4())
 
     # --- Guarda de domínio: se não há ticker nem âncora, cai no fallback ---
-    valid_tickers = _load_valid_tickers()
-    tokens = _tokenize(question)
-    has_ticker = bool(_extract_tickers(question, valid_tickers))
-    if not has_ticker and not _has_domain_anchor(tokens):
+    ctx = QuestionContext.build(question)
+    if not ctx.has_domain_anchor:
         elapsed_ms = int((time.time() - t0) * 1000)
         response = {
             "request_id": req_id,
@@ -902,7 +969,7 @@ def route_question(payload: Dict[str, Any]) -> Dict[str, Any]:
         return response
 
     # --- Escolha múltipla (top-K) ---
-    ranked = _choose_entities_by_ask(question)
+    ranked = _choose_entities_by_ask(ctx)
     selected = [
         (entity, intent, score)
         for entity, intent, score in ranked
@@ -960,7 +1027,7 @@ def route_question(payload: Dict[str, Any]) -> Dict[str, Any]:
     primary_key: Optional[str] = None
 
     for entity, intent, score in selected:
-        plan = _plan_question(question, entity, intent, payload)
+        plan = _plan_question(ctx, entity, intent, payload)
         run_request = plan["run_request"]
 
         normalized: ExtractedRunRequest = normalize_request(run_request)
