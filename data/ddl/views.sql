@@ -223,6 +223,259 @@ CREATE INDEX IF NOT EXISTS idx_fiis_info_classification_unaccent ON view_fiis_in
 CREATE INDEX IF NOT EXISTS idx_fiis_info_management_type_unaccent ON view_fiis_info (public.unaccent_ci(management_type));
 CREATE INDEX IF NOT EXISTS idx_fiis_info_target_market_unaccent ON view_fiis_info (public.unaccent_ci(target_market));
 
+ALTER MATERIALIZED VIEW public.view_fiis_info OWNER TO edge_user;
+REFRESH MATERIALIZED VIEW view_fiis_info;
+
+-- =====================================================================
+-- VIEW: view_fiis_history_dividends
+-- =====================================================================
+DROP MATERIALIZED VIEW IF EXISTS view_fiis_history_dividends CASCADE;
+
+CREATE MATERIALIZED VIEW view_fiis_history_dividends AS
+SELECT
+    bt.ticker AS ticker,
+    DATE_TRUNC('day', hd.traded_until) AS traded_until_date,
+    DATE_TRUNC('day', hd.payment_date) AS payment_date,
+    hd.amount AS dividend_amt,
+	TO_CHAR(TO_DATE(hd.created_at::text,
+		'YYYY-MM-DD'),
+	    'YYYY-MM-DD HH24:MI:SS') 				AS created_at,
+	TO_CHAR(TO_DATE(hd.updated_at::text,
+		'YYYY-MM-DD'),
+	    'YYYY-MM-DD HH24:MI:SS') 				AS updated_at
+FROM basics_tickers bt
+JOIN hist_dividends hd ON bt.ticker = hd.ticker
+ORDER BY bt.ticker ASC, hd.traded_until DESC, hd.payment_date DESC;
+
+CREATE UNIQUE INDEX idx_fiis_hist_dividends
+    ON view_fiis_history_dividends(ticker, traded_until_date, payment_date);
+
+
+ALTER MATERIALIZED VIEW public.view_fiis_history_dividends OWNER TO edge_user;
+REFRESH MATERIALIZED VIEW view_fiis_history_dividends;
+
+-- =====================================================================
+-- VIEW: view_fiis_history_assets
+-- =====================================================================
+DROP MATERIALIZED VIEW IF EXISTS view_fiis_history_assets CASCADE;
+
+CREATE MATERIALIZED VIEW view_fiis_history_assets AS
+SELECT
+    bt.ticker AS ticker,
+    at.asset AS asset_name,
+    at.asset_class AS asset_class,
+    at.address AS asset_address,
+    CASE
+        WHEN at.total_area ~ '^-?\d+(\.\d+)?$'
+        THEN ROUND(COALESCE(TO_NUMBER(at.total_area, '999999999D9999'), 0), 2)
+        ELSE 0
+    END AS total_area,
+    CASE
+        WHEN at.number_units ~ '^-?\d+(\.\d+)?$'
+        THEN ROUND(COALESCE(TO_NUMBER(at.number_units, '999999999D9999'), 0), 0)
+        ELSE 0
+    END AS units_count,
+    CASE
+        WHEN at.space_vacancy ~ '^-?\d+(\.\d+)?$'
+        THEN ROUND(COALESCE(TO_NUMBER(at.space_vacancy, '999999999D9999'), 0), 4)
+        ELSE 0
+    END AS vacancy_ratio,
+    CASE
+        WHEN at.non_compliance ~ '^-?\d+(\.\d+)?$'
+        THEN ROUND(COALESCE(TO_NUMBER(at.non_compliance, '999999999D9999'), 0), 4)
+        ELSE 0
+    END AS non_compliant_ratio,
+    CASE
+        WHEN at.asset_status = '1' THEN 'Ativo'
+        WHEN at.asset_status = '0' THEN 'Inativo'
+        ELSE NULL
+    END AS assets_status,
+    TO_CHAR(TO_DATE(at.created_at::text, 'YYYY-MM-DD'), 'YYYY-MM-DD HH24:MI:SS') AS created_at,
+    TO_CHAR(TO_DATE(at.updated_at::text, 'YYYY-MM-DD'), 'YYYY-MM-DD HH24:MI:SS') AS updated_at
+FROM basics_tickers bt
+JOIN assets_tickers at ON bt.ticker = at.ticker
+ORDER BY bt.ticker ASC;
+
+CREATE UNIQUE INDEX idx_fiis_assets
+    ON view_fiis_history_assets(ticker, asset_class, asset_name, asset_address, assets_status);
+
+
+ALTER MATERIALIZED VIEW public.view_fiis_history_assets OWNER TO edge_user;
+REFRESH MATERIALIZED VIEW view_fiis_history_assets;
+
+
+-- =====================================================================
+-- VIEW: view_fiis_history_judicial
+-- =====================================================================
+DROP MATERIALIZED VIEW IF EXISTS view_fiis_history_judicial CASCADE;
+
+CREATE MATERIALIZED VIEW view_fiis_history_judicial AS
+SELECT
+    bt.ticker          AS ticker,
+    pt.process_number  AS process_number,
+    pt.judgment        AS judgment,
+    pt.instance        AS instance,
+	TO_CHAR(TO_DATE(pt.initiation_date::text, 'YYYY-MM-DD'), 'YYYY-MM-DD HH24:MI:SS') AS initiation_date,
+	CASE
+        WHEN pt.value_of_cause ~ '^-?\d+(\.\d+)?$'
+        THEN ROUND(COALESCE(TO_NUMBER(pt.value_of_cause, '999999999999D99'), 0), 2)
+        ELSE 0
+    END AS cause_amt,
+    INITCAP(pt.process_parts)   AS process_parts,
+    INITCAP(pt.chance_of_loss)  AS loss_risk_pct,
+    pt.main_facts      AS main_facts,
+    pt.analysis_impact_loss AS loss_impact_analysis,
+    TO_CHAR(TO_DATE(pt.created_at::text, 'YYYY-MM-DD'), 'YYYY-MM-DD HH24:MI:SS') AS created_at,
+    TO_CHAR(TO_DATE(pt.updated_at::text, 'YYYY-MM-DD'), 'YYYY-MM-DD HH24:MI:SS') AS updated_at
+FROM basics_tickers bt
+JOIN process_tickers pt ON bt.ticker = pt.ticker
+ORDER BY bt.ticker ASC;
+
+CREATE UNIQUE INDEX idx_fiis_judicial
+    ON view_fiis_history_judicial(ticker, process_number);
+
+
+ALTER MATERIALIZED VIEW public.view_fiis_history_judicial OWNER TO edge_user;
+REFRESH MATERIALIZED VIEW view_fiis_history_judicial;
+
+-- =====================================================================
+-- VIEW: view_fiis_history_prices
+-- =====================================================================
+DROP MATERIALIZED VIEW IF EXISTS view_fiis_history_prices CASCADE;
+
+CREATE MATERIALIZED VIEW view_fiis_history_prices AS
+SELECT
+    bt.ticker          AS ticker,
+	TO_CHAR(TO_DATE(p.price_ref_date::text, 'YYYY-MM-DD'), 'YYYY-MM-DD HH24:MI:SS') AS price_date,
+    p.close_price      AS close_price,
+    p.adj_close_price  AS adj_close_price,
+    p.open_price       AS open_price,
+	ROUND(p.daily_range::numeric, 2) AS daily_range_pct,
+    p.max_price        AS max_price,
+    p.min_price        AS min_price,
+	TO_CHAR(TO_DATE(p.created_at::text, 'YYYY-MM-DD'), 'YYYY-MM-DD HH24:MI:SS') AS created_at,
+    TO_CHAR(TO_DATE(p.updated_at::text, 'YYYY-MM-DD'), 'YYYY-MM-DD HH24:MI:SS') AS updated_at
+FROM basics_tickers bt
+JOIN price_tickers p ON bt.ticker = p.ticker
+ORDER BY bt.ticker ASC, p.price_ref_date DESC;
+
+CREATE UNIQUE INDEX idx_fiis_history_prices
+    ON view_fiis_history_prices(ticker, price_date);
+
+
+ALTER MATERIALIZED VIEW public.view_fiis_history_prices OWNER TO edge_user;
+REFRESH MATERIALIZED VIEW view_fiis_history_prices;
+
+-- =====================================================================
+-- VIEW: view_fiis_history_news
+-- =====================================================================
+DROP MATERIALIZED VIEW IF EXISTS view_fiis_history_news CASCADE;
+
+CREATE MATERIALIZED VIEW view_fiis_history_news AS
+SELECT
+    bt.ticker           AS ticker,
+    mn.news_topic       AS news_source,
+    mn.news_title       AS news_title,
+	TO_CHAR(TO_DATE(mn.news_date::text, 'YYYY-MM-DD'), 'YYYY-MM-DD HH24:MI:SS') AS news_date,
+    mn.news_tags        AS news_tags,
+    mn.news_description AS news_description,
+    mn.news_url         AS news_url,
+	mn.news_image		AS news_image_url,
+	TO_CHAR(TO_DATE(mn.created_at::text, 'YYYY-MM-DD'), 'YYYY-MM-DD HH24:MI:SS') AS created_at,
+    TO_CHAR(TO_DATE(mn.updated_at::text, 'YYYY-MM-DD'), 'YYYY-MM-DD HH24:MI:SS') AS updated_at
+FROM basics_tickers bt
+JOIN market_news mn
+  ON (mn.news_title ILIKE '%' || bt.ticker || '%' OR
+      mn.news_description ILIKE '%' || bt.ticker || '%')
+ORDER BY bt.ticker;
+
+CREATE UNIQUE INDEX idx_fiis_history_news
+    ON view_fiis_history_news(ticker, news_url);
+CREATE INDEX IF NOT EXISTS idx_news_ticker_date
+ON view_fiis_history_news (ticker, news_date DESC);
+
+
+ALTER MATERIALIZED VIEW public.view_fiis_history_news OWNER TO edge_user;
+REFRESH MATERIALIZED VIEW view_fiis_history_news;
+
+
+-- =====================================================================
+-- VIEW: view_market_indicators
+-- =====================================================================
+DROP MATERIALIZED VIEW IF EXISTS view_market_indicators CASCADE;
+
+CREATE MATERIALIZED VIEW view_market_indicators AS
+SELECT
+	TO_CHAR(TO_DATE(hi.date_indicators::text, 'YYYY-MM-DD'), 'YYYY-MM-DD HH24:MI:SS') AS indicator_date,
+    UPPER(hi.slug_indicators)   AS indicator_name,
+    hi.value_indicators  AS indicator_amt,
+	TO_CHAR(TO_DATE(hi.created_at::text, 'YYYY-MM-DD'), 'YYYY-MM-DD HH24:MI:SS') AS created_at,
+    TO_CHAR(TO_DATE(hi.updated_at::text, 'YYYY-MM-DD'), 'YYYY-MM-DD HH24:MI:SS') AS updated_at
+FROM public.hist_indicators hi
+ORDER BY hi.date_indicators DESC, hi.slug_indicators ASC;
+
+
+CREATE UNIQUE INDEX idx_market_indicators
+    ON view_market_indicators(indicator_date, indicator_name);
+
+
+ALTER MATERIALIZED VIEW public.view_market_indicators OWNER TO edge_user;
+REFRESH MATERIALIZED VIEW view_market_indicators;
+
+-- =====================================================================
+-- VIEW: view_history_taxes
+-- =====================================================================
+DROP MATERIALIZED VIEW IF EXISTS view_history_taxes CASCADE;
+
+CREATE MATERIALIZED VIEW view_history_taxes AS
+SELECT
+	TO_CHAR(TO_DATE(ht.date_taxes::text, 'YYYY-MM-DD'), 'YYYY-MM-DD HH24:MI:SS') AS tax_date,
+    ROUND(ht.cdi_taxes::numeric, 2)         AS cdi_rate_pct,
+    ROUND(ht.selic_taxes::numeric, 2)       AS selic_rate_pct,
+    ROUND(ht.ibovespa_taxes::numeric, 0) 	 AS ibov_points_count,
+    ROUND(ht.ibovespa_variation::numeric, 2) AS ibov_var_pct,
+	ROUND(ht.ifix_taxes::numeric, 0) 		 AS ifix_points_count,
+    ROUND(ht.ifix_variation::numeric, 2)    AS ifix_var_pct,
+	ROUND(ht.ifil_taxes::numeric, 0) 		 AS ifil_points_count,
+    ROUND(ht.ifil_variation::numeric, 2)    AS ifil_var_pct,
+    ROUND(ht.usd_buy::numeric, 2)           AS usd_buy_amt,
+    ROUND(ht.usd_sell::numeric, 2)          AS usd_sell_amt,
+    ROUND(ht.usd_variation::numeric, 2)     AS usd_var_pct,
+    ROUND(ht.eur_buy::numeric, 2)           AS eur_buy_amt,
+    ROUND(ht.eur_sell::numeric, 2)          AS eur_sell_amt,
+    ROUND(ht.eur_variation::numeric, 2)     AS eur_var_pct,
+	TO_CHAR(TO_DATE(ht.created_at::text, 'YYYY-MM-DD'), 'YYYY-MM-DD HH24:MI:SS') AS created_at,
+    TO_CHAR(TO_DATE(ht.updated_at::text, 'YYYY-MM-DD'), 'YYYY-MM-DD HH24:MI:SS') AS updated_at
+FROM public.hist_taxes ht
+ORDER BY ht.date_taxes DESC;
+
+CREATE UNIQUE INDEX idx_history_taxes
+    ON view_history_taxes(tax_date);
+
+
+ALTER MATERIALIZED VIEW public.view_history_taxes OWNER TO edge_user;
+REFRESH MATERIALIZED VIEW view_history_taxes;
+
+
+-- 1) Cadastro / Perfil
+COMMENT ON MATERIALIZED VIEW view_fiis_info IS 'Informações cadastrais completas de cada Fundo Imobiliário listado na B3 (1 linha por fundo).||ask:intents=cadastro;keywords=cadastro,ficha,perfil,cnpj,site,administrador,custodiante,gestor,tipo,segmento,classificação,publico-alvo,ipo,isin,b3;synonyms.cadastro=cadastro,perfil,ficha,informações,cnpj,administrador,gestor,custodiante,site,tipo,segmento,classificação,público-alvo,ipo,isin,nome b3,valor de mercado,p/vp,market cap,sharpe,volatilidade,dividend payout,cap rate,ev,eps,rps,equity per share,revenue per share;latest_words=último,últimos,mais recente,recente,atual;timewords=hoje,ontem,janeiro,fevereiro,março,abril,maio,junho,julho,agosto,setembro,outubro,novembro,dezembro;weights.keywords=1;weights.synonyms=2;';
+-- 2) Dividendos (histórico / últimos)
+COMMENT ON MATERIALIZED VIEW view_fiis_history_dividends IS 'Histórico detalhado de dividendos distribuídos por cada FII, incluindo datas de pagamento e valores declarados.||ask:intents=dividends,historico;keywords=dividendo,dividendos,rendimentos,rendimento,provento,proventos,histórico,último,mais recente,yield,dy,repasse;synonyms.dividends=dividendo,dividendos,rendimentos,proventos,pagamentos,repasse,yield,dy;synonyms.historico=histórico,histórico de dividendos,mês a mês,anual,total,linha do tempo;latest_words=último,últimos,mais recente,recente,atual;timewords=hoje,ontem,mes passado,mês anterior,ano atual,12 meses,janeiro,fevereiro,março,abril,maio,junho,julho,agosto,setembro,outubro,novembro,dezembro;weights.keywords=1;weights.synonyms=2;';
+-- 3) Ativos / Imóveis (portfólio)
+COMMENT ON MATERIALIZED VIEW view_fiis_history_assets IS 'Relação completa dos ativos e imóveis integrantes do portfólio de cada FII, com localização e características principais.||ask:intents=ativos,imoveis;keywords=imóvel,imoveis,ativo,ativos,asset,endereço,localização,portfólio,propriedade,shopping,galpão,cri,papel;synonyms.ativos=imóveis,ativos,bens,propriedades,portfólio,empreendimentos,galpões,shoppings,lojas,crIs,papéis;weights.keywords=1;weights.synonyms=2;';
+-- 4) Processos judiciais
+COMMENT ON MATERIALIZED VIEW view_fiis_history_judicial IS 'Processos judiciais e ações legais associadas a cada Fundo Imobiliário, incluindo número do processo, valor da causa e status da instância.||ask:intents=judicial,processos;keywords=judicial,processo,ação,instância,valor da causa,riscos,litígio,decisão,cível,trabalhista,administrativo,cvm;synonyms.judicial=processo,ação,litígio,demanda,causa,processos administrativos,cvm,trabalhista,cível;weights.keywords=1;weights.synonyms=2;';
+-- 5) Preços (série temporal / último)
+COMMENT ON MATERIALIZED VIEW view_fiis_history_prices IS 'Série temporal de preços dos FIIs, contemplando valores de abertura, fechamento, máxima e mínima.||ask:intents=precos,historico;keywords=preço,preços,fechamento,abertura,alta,baixa,histórico,gráfico,cotação,cota,média móvel,tendência;synonyms.precos=preço,cotação,valor,fechamento,cota,última cotação,atual,ontem,hoje;synonyms.historico=histórico,evolução de preços,série temporal,gráfico;latest_words=último,últimos,mais recente,recente,atual;timewords=hoje,ontem,mes passado,mês anterior,ano atual,30 dias,janeiro,fevereiro,março,abril,maio,junho,julho,agosto,setembro,outubro,novembro,dezembro;weights.keywords=1;weights.synonyms=2;';
+-- 6) Notícias (últimas / histórico)
+COMMENT ON MATERIALIZED VIEW view_fiis_history_news IS 'Notícias e publicações relacionadas aos Fundos Imobiliários, agregadas por fonte e data de divulgação.||ask:intents=noticias,news;keywords=notícia,notícias,news,título,fonte,matéria,divulgação,publicação,manchete;synonyms.noticias=notícia,notícias,news,manchete,publicação,divulgação,comunicado,fato relevante;latest_words=último,últimos,mais recente,recente,atual;timewords=hoje,ontem,semana,mês,janeiro,fevereiro,março,abril,maio,junho,julho,agosto,setembro,outubro,novembro,dezembro;weights.keywords=1;weights.synonyms=2;';
+-- 7) Indicadores de mercado (índices, taxas-índice)
+COMMENT ON MATERIALIZED VIEW view_market_indicators IS 'Indicadores e índices de mercado relevantes para o universo de FIIs, como IFIX, CDI, SELIC, dólar e euro.||ask:intents=indicadores,mercado;keywords=ifix,ifil,ibov,cdi,selic,dólar,euro,indicadores,benchmark,referência,ipca,igpm,incc;synonyms.indicadores=indicadores,índices,taxas,benchmarks,ipca,igpm,incc,inflação;latest_words=último,mais recente,atual;timewords=hoje,ontem,acumulado,12 meses,ano,2024,2025,janeiro,...,dezembro;weights.keywords=1;weights.synonyms=2;';
+-- 8) Taxas/índices econômicos diários (séries)
+COMMENT ON MATERIALIZED VIEW view_history_taxes IS 'Séries históricas de taxas financeiras e índices econômicos diários, incluindo CDI, SELIC e poupança.||ask:intents=taxas,diario;keywords=cdi,selic,poupança,juros,índices,diário,ipca,igpm,incc;synonyms.taxas=taxas,juros,índices,indicadores,diário,diaria;latest_words=último,mais recente,atual;timewords=hoje,ontem,acumulado,no ano,12 meses,janeiro,...,dezembro;weights.keywords=1;weights.synonyms=2;';
+
+
+
 COMMENT ON COLUMN view_fiis_info.ticker IS 'Código do fundo na B3.|Código FII';
 COMMENT ON COLUMN view_fiis_info.fii_cnpj IS 'CNPJ do FII (identificador único).|CNPJ';
 COMMENT ON COLUMN view_fiis_info.ticker_full_name IS 'Nome completo do ticker.|Nome completo';
@@ -301,32 +554,7 @@ COMMENT ON COLUMN view_fiis_info.ifil_rank_movement_count IS 'Movimento de posi�
 COMMENT ON COLUMN view_fiis_info.created_at IS 'Data de criação do registro.|Criado em';
 COMMENT ON COLUMN view_fiis_info.updated_at IS 'Data da última atualização do registro.|Atualizado em';
 
-ALTER MATERIALIZED VIEW public.view_fiis_info OWNER TO edge_user;
-REFRESH MATERIALIZED VIEW view_fiis_info;
 
--- =====================================================================
--- VIEW: view_fiis_history_dividends
--- =====================================================================
-DROP MATERIALIZED VIEW IF EXISTS view_fiis_history_dividends CASCADE;
-
-CREATE MATERIALIZED VIEW view_fiis_history_dividends AS
-SELECT
-    bt.ticker AS ticker,
-    DATE_TRUNC('day', hd.traded_until) AS traded_until_date,
-    DATE_TRUNC('day', hd.payment_date) AS payment_date,
-    hd.amount AS dividend_amt,
-	TO_CHAR(TO_DATE(hd.created_at::text,
-		'YYYY-MM-DD'),
-	    'YYYY-MM-DD HH24:MI:SS') 				AS created_at,
-	TO_CHAR(TO_DATE(hd.updated_at::text,
-		'YYYY-MM-DD'),
-	    'YYYY-MM-DD HH24:MI:SS') 				AS updated_at
-FROM basics_tickers bt
-JOIN hist_dividends hd ON bt.ticker = hd.ticker
-ORDER BY bt.ticker ASC, hd.traded_until DESC, hd.payment_date DESC;
-
-CREATE UNIQUE INDEX idx_fiis_hist_dividends
-    ON view_fiis_history_dividends(ticker, traded_until_date, payment_date);
 
 
 COMMENT ON COLUMN view_fiis_history_dividends.ticker IS 'Ticker do FII.|Código FII';
@@ -335,54 +563,6 @@ COMMENT ON COLUMN view_fiis_history_dividends.payment_date IS 'Data de pagamento
 COMMENT ON COLUMN view_fiis_history_dividends.dividend_amt IS 'Valor do dividendo pago.|Valor do dividendo';
 COMMENT ON COLUMN view_fiis_history_dividends.created_at IS 'Data de criação do registro.|Criado em';
 COMMENT ON COLUMN view_fiis_history_dividends.updated_at IS 'Data da última atualização do registro.|Atualizado em';
-
-ALTER MATERIALIZED VIEW public.view_fiis_history_dividends OWNER TO edge_user;
-REFRESH MATERIALIZED VIEW view_fiis_history_dividends;
-
--- =====================================================================
--- VIEW: view_fiis_history_assets
--- =====================================================================
-DROP MATERIALIZED VIEW IF EXISTS view_fiis_history_assets CASCADE;
-
-CREATE MATERIALIZED VIEW view_fiis_history_assets AS
-SELECT
-    bt.ticker AS ticker,
-    at.asset AS asset_name,
-    at.asset_class AS asset_class,
-    at.address AS asset_address,
-    CASE
-        WHEN at.total_area ~ '^-?\d+(\.\d+)?$'
-        THEN ROUND(COALESCE(TO_NUMBER(at.total_area, '999999999D9999'), 0), 2)
-        ELSE 0
-    END AS total_area,
-    CASE
-        WHEN at.number_units ~ '^-?\d+(\.\d+)?$'
-        THEN ROUND(COALESCE(TO_NUMBER(at.number_units, '999999999D9999'), 0), 0)
-        ELSE 0
-    END AS units_count,
-    CASE
-        WHEN at.space_vacancy ~ '^-?\d+(\.\d+)?$'
-        THEN ROUND(COALESCE(TO_NUMBER(at.space_vacancy, '999999999D9999'), 0), 4)
-        ELSE 0
-    END AS vacancy_ratio,
-    CASE
-        WHEN at.non_compliance ~ '^-?\d+(\.\d+)?$'
-        THEN ROUND(COALESCE(TO_NUMBER(at.non_compliance, '999999999D9999'), 0), 4)
-        ELSE 0
-    END AS non_compliant_ratio,
-    CASE
-        WHEN at.asset_status = '1' THEN 'Ativo'
-        WHEN at.asset_status = '0' THEN 'Inativo'
-        ELSE NULL
-    END AS assets_status,
-    TO_CHAR(TO_DATE(at.created_at::text, 'YYYY-MM-DD'), 'YYYY-MM-DD HH24:MI:SS') AS created_at,
-    TO_CHAR(TO_DATE(at.updated_at::text, 'YYYY-MM-DD'), 'YYYY-MM-DD HH24:MI:SS') AS updated_at
-FROM basics_tickers bt
-JOIN assets_tickers at ON bt.ticker = at.ticker
-ORDER BY bt.ticker ASC;
-
-CREATE UNIQUE INDEX idx_fiis_assets
-    ON view_fiis_history_assets(ticker, asset_class, asset_name, asset_address, assets_status);
 
 COMMENT ON COLUMN view_fiis_history_assets.ticker IS 'Ticker do FII.|Código FII';
 COMMENT ON COLUMN view_fiis_history_assets.asset_name IS 'Nome do ativo (imóvel).|Nome do ativo';
@@ -394,40 +574,6 @@ COMMENT ON COLUMN view_fiis_history_assets.vacancy_ratio IS 'Taxa de vacância d
 COMMENT ON COLUMN view_fiis_history_assets.non_compliant_ratio IS 'Taxa de inadimplência do ativo (%).|Inadimplência';
 COMMENT ON COLUMN view_fiis_history_assets.created_at IS 'Data de criação do registro.|Criado em';
 COMMENT ON COLUMN view_fiis_history_assets.updated_at IS 'Data da última atualização do registro.|Atualizado em';
-
-ALTER MATERIALIZED VIEW public.view_fiis_history_assets OWNER TO edge_user;
-REFRESH MATERIALIZED VIEW view_fiis_history_assets;
-
-
--- =====================================================================
--- VIEW: view_fiis_history_judicial
--- =====================================================================
-DROP MATERIALIZED VIEW IF EXISTS view_fiis_history_judicial CASCADE;
-
-CREATE MATERIALIZED VIEW view_fiis_history_judicial AS
-SELECT
-    bt.ticker          AS ticker,
-    pt.process_number  AS process_number,
-    pt.judgment        AS judgment,
-    pt.instance        AS instance,
-	TO_CHAR(TO_DATE(pt.initiation_date::text, 'YYYY-MM-DD'), 'YYYY-MM-DD HH24:MI:SS') AS initiation_date,
-	CASE
-        WHEN pt.value_of_cause ~ '^-?\d+(\.\d+)?$'
-        THEN ROUND(COALESCE(TO_NUMBER(pt.value_of_cause, '999999999999D99'), 0), 2)
-        ELSE 0
-    END AS cause_amt,
-    INITCAP(pt.process_parts)   AS process_parts,
-    INITCAP(pt.chance_of_loss)  AS loss_risk_pct,
-    pt.main_facts      AS main_facts,
-    pt.analysis_impact_loss AS loss_impact_analysis,
-    TO_CHAR(TO_DATE(pt.created_at::text, 'YYYY-MM-DD'), 'YYYY-MM-DD HH24:MI:SS') AS created_at,
-    TO_CHAR(TO_DATE(pt.updated_at::text, 'YYYY-MM-DD'), 'YYYY-MM-DD HH24:MI:SS') AS updated_at
-FROM basics_tickers bt
-JOIN process_tickers pt ON bt.ticker = pt.ticker
-ORDER BY bt.ticker ASC;
-
-CREATE UNIQUE INDEX idx_fiis_judicial
-    ON view_fiis_history_judicial(ticker, process_number);
 
 COMMENT ON COLUMN view_fiis_history_judicial.ticker IS 'Ticker do FII.|Código FII';
 COMMENT ON COLUMN view_fiis_history_judicial.process_number IS 'Número do processo judicial.|Identificador do processo';
@@ -442,32 +588,6 @@ COMMENT ON COLUMN view_fiis_history_judicial.loss_impact_analysis IS 'Análise d
 COMMENT ON COLUMN view_fiis_history_judicial.created_at IS 'Data de criação do registro.|Criado em';
 COMMENT ON COLUMN view_fiis_history_judicial.updated_at IS 'Data da última atualização do registro.|Atualizado em';
 
-ALTER MATERIALIZED VIEW public.view_fiis_history_judicial OWNER TO edge_user;
-REFRESH MATERIALIZED VIEW view_fiis_history_judicial;
-
--- =====================================================================
--- VIEW: view_fiis_history_prices
--- =====================================================================
-DROP MATERIALIZED VIEW IF EXISTS view_fiis_history_prices CASCADE;
-
-CREATE MATERIALIZED VIEW view_fiis_history_prices AS
-SELECT
-    bt.ticker          AS ticker,
-	TO_CHAR(TO_DATE(p.price_ref_date::text, 'YYYY-MM-DD'), 'YYYY-MM-DD HH24:MI:SS') AS price_date,
-    p.close_price      AS close_price,
-    p.adj_close_price  AS adj_close_price,
-    p.open_price       AS open_price,
-	ROUND(p.daily_range::numeric, 2) AS daily_range_pct,
-    p.max_price        AS max_price,
-    p.min_price        AS min_price,
-	TO_CHAR(TO_DATE(p.created_at::text, 'YYYY-MM-DD'), 'YYYY-MM-DD HH24:MI:SS') AS created_at,
-    TO_CHAR(TO_DATE(p.updated_at::text, 'YYYY-MM-DD'), 'YYYY-MM-DD HH24:MI:SS') AS updated_at
-FROM basics_tickers bt
-JOIN price_tickers p ON bt.ticker = p.ticker
-ORDER BY bt.ticker ASC, p.price_ref_date DESC;
-
-CREATE UNIQUE INDEX idx_fiis_history_prices
-    ON view_fiis_history_prices(ticker, price_date);
 
 COMMENT ON COLUMN view_fiis_history_prices.ticker IS 'Ticker do FII.|Código FII';
 COMMENT ON COLUMN view_fiis_history_prices.price_date IS 'Data de referência do preço.|Data de referência';
@@ -479,37 +599,6 @@ COMMENT ON COLUMN view_fiis_history_prices.max_price IS 'Preço máximo no dia.|
 COMMENT ON COLUMN view_fiis_history_prices.min_price IS 'Preço mínimo no dia.|Mínima';
 COMMENT ON COLUMN view_fiis_history_prices.created_at IS 'Data de criação do registro.|Criado em';
 COMMENT ON COLUMN view_fiis_history_prices.updated_at IS 'Data da última atualização do registro.|Atualizado em';
-
-ALTER MATERIALIZED VIEW public.view_fiis_history_prices OWNER TO edge_user;
-REFRESH MATERIALIZED VIEW view_fiis_history_prices;
-
--- =====================================================================
--- VIEW: view_fiis_history_news
--- =====================================================================
-DROP MATERIALIZED VIEW IF EXISTS view_fiis_history_news CASCADE;
-
-CREATE MATERIALIZED VIEW view_fiis_history_news AS
-SELECT
-    bt.ticker           AS ticker,
-    mn.news_topic       AS news_source,
-    mn.news_title       AS news_title,
-	TO_CHAR(TO_DATE(mn.news_date::text, 'YYYY-MM-DD'), 'YYYY-MM-DD HH24:MI:SS') AS news_date,
-    mn.news_tags        AS news_tags,
-    mn.news_description AS news_description,
-    mn.news_url         AS news_url,
-	mn.news_image		AS news_image_url,
-	TO_CHAR(TO_DATE(mn.created_at::text, 'YYYY-MM-DD'), 'YYYY-MM-DD HH24:MI:SS') AS created_at,
-    TO_CHAR(TO_DATE(mn.updated_at::text, 'YYYY-MM-DD'), 'YYYY-MM-DD HH24:MI:SS') AS updated_at
-FROM basics_tickers bt
-JOIN market_news mn
-  ON (mn.news_title ILIKE '%' || bt.ticker || '%' OR
-      mn.news_description ILIKE '%' || bt.ticker || '%')
-ORDER BY bt.ticker;
-
-CREATE UNIQUE INDEX idx_fiis_history_news
-    ON view_fiis_history_news(ticker, news_url);
-CREATE INDEX IF NOT EXISTS idx_news_ticker_date
-ON view_fiis_history_news (ticker, news_date DESC);
 
 
 COMMENT ON COLUMN view_fiis_history_news.ticker IS 'Ticker do FII.|Código FII';
@@ -524,67 +613,12 @@ COMMENT ON COLUMN view_fiis_history_news.created_at IS 'Data de criação do reg
 COMMENT ON COLUMN view_fiis_history_news.updated_at IS 'Data da última atualização do registro.|Atualizado em';
 
 
-ALTER MATERIALIZED VIEW public.view_fiis_history_news OWNER TO edge_user;
-REFRESH MATERIALIZED VIEW view_fiis_history_news;
-
-
--- =====================================================================
--- VIEW: view_market_indicators
--- =====================================================================
-DROP MATERIALIZED VIEW IF EXISTS view_market_indicators CASCADE;
-
-CREATE MATERIALIZED VIEW view_market_indicators AS
-SELECT
-	TO_CHAR(TO_DATE(hi.date_indicators::text, 'YYYY-MM-DD'), 'YYYY-MM-DD HH24:MI:SS') AS indicator_date,
-    UPPER(hi.slug_indicators)   AS indicator_name,
-    hi.value_indicators  AS indicator_amt,
-	TO_CHAR(TO_DATE(hi.created_at::text, 'YYYY-MM-DD'), 'YYYY-MM-DD HH24:MI:SS') AS created_at,
-    TO_CHAR(TO_DATE(hi.updated_at::text, 'YYYY-MM-DD'), 'YYYY-MM-DD HH24:MI:SS') AS updated_at
-FROM public.hist_indicators hi
-ORDER BY hi.date_indicators DESC, hi.slug_indicators ASC;
-
-
-CREATE UNIQUE INDEX idx_market_indicators
-    ON view_market_indicators(indicator_date, indicator_name);
 
 COMMENT ON COLUMN view_market_indicators.indicator_date IS 'Data de referência do indicador.|Data';
 COMMENT ON COLUMN view_market_indicators.indicator_name IS 'Nome ou identificador do indicador.|Indicador';
 COMMENT ON COLUMN view_market_indicators.indicator_amt IS 'Valor registrado do indicador.|Valor';
 COMMENT ON COLUMN view_market_indicators.created_at IS 'Data de criação do registro.|Criado em';
 COMMENT ON COLUMN view_market_indicators.updated_at IS 'Data da última atualização do registro.|Atualizado em';
-
-ALTER MATERIALIZED VIEW public.view_market_indicators OWNER TO edge_user;
-REFRESH MATERIALIZED VIEW view_market_indicators;
-
--- =====================================================================
--- VIEW: view_history_taxes
--- =====================================================================
-DROP MATERIALIZED VIEW IF EXISTS view_history_taxes CASCADE;
-
-CREATE MATERIALIZED VIEW view_history_taxes AS
-SELECT
-	TO_CHAR(TO_DATE(ht.date_taxes::text, 'YYYY-MM-DD'), 'YYYY-MM-DD HH24:MI:SS') AS tax_date,
-    ROUND(ht.cdi_taxes::numeric, 2)         AS cdi_rate_pct,
-    ROUND(ht.selic_taxes::numeric, 2)       AS selic_rate_pct,
-    ROUND(ht.ibovespa_taxes::numeric, 0) 	 AS ibov_points_count,
-    ROUND(ht.ibovespa_variation::numeric, 2) AS ibov_var_pct,
-	ROUND(ht.ifix_taxes::numeric, 0) 		 AS ifix_points_count,
-    ROUND(ht.ifix_variation::numeric, 2)    AS ifix_var_pct,
-	ROUND(ht.ifil_taxes::numeric, 0) 		 AS ifil_points_count,
-    ROUND(ht.ifil_variation::numeric, 2)    AS ifil_var_pct,
-    ROUND(ht.usd_buy::numeric, 2)           AS usd_buy_amt,
-    ROUND(ht.usd_sell::numeric, 2)          AS usd_sell_amt,
-    ROUND(ht.usd_variation::numeric, 2)     AS usd_var_pct,
-    ROUND(ht.eur_buy::numeric, 2)           AS eur_buy_amt,
-    ROUND(ht.eur_sell::numeric, 2)          AS eur_sell_amt,
-    ROUND(ht.eur_variation::numeric, 2)     AS eur_var_pct,
-	TO_CHAR(TO_DATE(ht.created_at::text, 'YYYY-MM-DD'), 'YYYY-MM-DD HH24:MI:SS') AS created_at,
-    TO_CHAR(TO_DATE(ht.updated_at::text, 'YYYY-MM-DD'), 'YYYY-MM-DD HH24:MI:SS') AS updated_at
-FROM public.hist_taxes ht
-ORDER BY ht.date_taxes DESC;
-
-CREATE UNIQUE INDEX idx_history_taxes
-    ON view_history_taxes(tax_date);
 
 COMMENT ON COLUMN view_history_taxes.tax_date IS 'Data de referência.|Data';
 COMMENT ON COLUMN view_history_taxes.cdi_rate_pct IS 'Taxa CDI (%).|CDI';
@@ -603,25 +637,3 @@ COMMENT ON COLUMN view_history_taxes.eur_sell_amt IS 'Cotação de venda do euro
 COMMENT ON COLUMN view_history_taxes.eur_var_pct IS 'Variação percentual do euro.|EURO variação';
 COMMENT ON COLUMN view_history_taxes.created_at IS 'Data de criação do registro.|Criado em';
 COMMENT ON COLUMN view_history_taxes.updated_at IS 'Data da última atualização do registro.|Atualizado em';
-
-ALTER MATERIALIZED VIEW public.view_history_taxes OWNER TO edge_user;
-REFRESH MATERIALIZED VIEW view_history_taxes;
-
-
--- 1) Cadastro / Perfil
-COMMENT ON MATERIALIZED VIEW view_fiis_info IS 'Informações cadastrais completas de cada Fundo Imobiliário listado na B3 (1 linha por fundo).||ask:intents=cadastro;keywords=cadastro,ficha,perfil,cnpj,site,administrador,custodiante,gestor,tipo,segmento,classificação,publico-alvo,ipo,isin,b3;synonyms.cadastro=cadastro,perfil,ficha,informações,cnpj,administrador,gestor,custodiante,site,tipo,segmento,classificação,público-alvo,ipo,isin,nome b3,valor de mercado,p/vp,market cap,sharpe,volatilidade,dividend payout,cap rate,ev,eps,rps,equity per share,revenue per share;latest_words=último,últimos,mais recente,recente,atual;timewords=hoje,ontem,janeiro,fevereiro,março,abril,maio,junho,julho,agosto,setembro,outubro,novembro,dezembro;weights.keywords=1;weights.synonyms=2;';
--- 2) Dividendos (histórico / últimos)
-COMMENT ON MATERIALIZED VIEW view_fiis_history_dividends IS 'Histórico detalhado de dividendos distribuídos por cada FII, incluindo datas de pagamento e valores declarados.||ask:intents=dividends,historico;keywords=dividendo,dividendos,rendimentos,rendimento,provento,proventos,histórico,último,mais recente,yield,dy,repasse;synonyms.dividends=dividendo,dividendos,rendimentos,proventos,pagamentos,repasse,yield,dy;synonyms.historico=histórico,histórico de dividendos,mês a mês,anual,total,linha do tempo;latest_words=último,últimos,mais recente,recente,atual;timewords=hoje,ontem,mes passado,mês anterior,ano atual,12 meses,janeiro,fevereiro,março,abril,maio,junho,julho,agosto,setembro,outubro,novembro,dezembro;weights.keywords=1;weights.synonyms=2;';
--- 3) Ativos / Imóveis (portfólio)
-COMMENT ON MATERIALIZED VIEW view_fiis_history_assets IS 'Relação completa dos ativos e imóveis integrantes do portfólio de cada FII, com localização e características principais.||ask:intents=ativos,imoveis;keywords=imóvel,imoveis,ativo,ativos,asset,endereço,localização,portfólio,propriedade,shopping,galpão,cri,papel;synonyms.ativos=imóveis,ativos,bens,propriedades,portfólio,empreendimentos,galpões,shoppings,lojas,crIs,papéis;weights.keywords=1;weights.synonyms=2;';
--- 4) Processos judiciais
-COMMENT ON MATERIALIZED VIEW view_fiis_history_judicial IS 'Processos judiciais e ações legais associadas a cada Fundo Imobiliário, incluindo número do processo, valor da causa e status da instância.||ask:intents=judicial,processos;keywords=judicial,processo,ação,instância,valor da causa,riscos,litígio,decisão,cível,trabalhista,administrativo,cvm;synonyms.judicial=processo,ação,litígio,demanda,causa,processos administrativos,cvm,trabalhista,cível;weights.keywords=1;weights.synonyms=2;';
--- 5) Preços (série temporal / último)
-COMMENT ON MATERIALIZED VIEW view_fiis_history_prices IS 'Série temporal de preços dos FIIs, contemplando valores de abertura, fechamento, máxima e mínima.||ask:intents=precos,historico;keywords=preço,preços,fechamento,abertura,alta,baixa,histórico,gráfico,cotação,cota,média móvel,tendência;synonyms.precos=preço,cotação,valor,fechamento,cota,última cotação,atual,ontem,hoje;synonyms.historico=histórico,evolução de preços,série temporal,gráfico;latest_words=último,últimos,mais recente,recente,atual;timewords=hoje,ontem,mes passado,mês anterior,ano atual,30 dias,janeiro,fevereiro,março,abril,maio,junho,julho,agosto,setembro,outubro,novembro,dezembro;weights.keywords=1;weights.synonyms=2;';
--- 6) Notícias (últimas / histórico)
-COMMENT ON MATERIALIZED VIEW view_fiis_history_news IS 'Notícias e publicações relacionadas aos Fundos Imobiliários, agregadas por fonte e data de divulgação.||ask:intents=noticias,news;keywords=notícia,notícias,news,título,fonte,matéria,divulgação,publicação,manchete;synonyms.noticias=notícia,notícias,news,manchete,publicação,divulgação,comunicado,fato relevante;latest_words=último,últimos,mais recente,recente,atual;timewords=hoje,ontem,semana,mês,janeiro,fevereiro,março,abril,maio,junho,julho,agosto,setembro,outubro,novembro,dezembro;weights.keywords=1;weights.synonyms=2;';
--- 7) Indicadores de mercado (índices, taxas-índice)
-COMMENT ON MATERIALIZED VIEW view_market_indicators IS 'Indicadores e índices de mercado relevantes para o universo de FIIs, como IFIX, CDI, SELIC, dólar e euro.||ask:intents=indicadores,mercado;keywords=ifix,ifil,ibov,cdi,selic,dólar,euro,indicadores,benchmark,referência,ipca,igpm,incc;synonyms.indicadores=indicadores,índices,taxas,benchmarks,ipca,igpm,incc,inflação;latest_words=último,mais recente,atual;timewords=hoje,ontem,acumulado,12 meses,ano,2024,2025,janeiro,...,dezembro;weights.keywords=1;weights.synonyms=2;';
--- 8) Taxas/índices econômicos diários (séries)
-COMMENT ON MATERIALIZED VIEW view_history_taxes IS 'Séries históricas de taxas financeiras e índices econômicos diários, incluindo CDI, SELIC e poupança.||ask:intents=taxas,diario;keywords=cdi,selic,poupança,juros,índices,diário,ipca,igpm,incc;synonyms.taxas=taxas,juros,índices,indicadores,diário,diaria;latest_words=último,mais recente,atual;timewords=hoje,ontem,acumulado,no ano,12 meses,janeiro,...,dezembro;weights.keywords=1;weights.synonyms=2;';
-
